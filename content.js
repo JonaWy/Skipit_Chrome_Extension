@@ -42,9 +42,24 @@ const SKIP_BUTTON_SELECTORS = {
         'button[aria-label*="Skip"]'
     ],
 
-    // Crunchyroll
+    // Crunchyroll (Player runs in iframe from static.crunchyroll.com)
     crunchyroll: [
+        // Primary skip button container
+        '[data-testid="skipButton"]',
+        '[data-testid="skipButton"] div[tabindex="0"]',
+        // Text identifiers inside skip button
+        '[data-testid="skipIntroText"]',
+        '[data-testid="skipRecapText"]',
+        // Class-based selectors
+        '.erc-skip-button',
         '.skip-button',
+        '.vjs-overlay-skip-intro',
+        // Aria labels (German)
+        '[aria-label*="Opening überspringen"]',
+        '[aria-label*="Intro überspringen"]',
+        '[aria-label*="Rückblick überspringen"]',
+        '[aria-label*="Abspann überspringen"]',
+        // Legacy/fallback
         'button[class*="skip-intro"]',
         'button[class*="skip-recap"]',
         '[data-t="skip-intro-button"]',
@@ -85,20 +100,23 @@ const SKIP_BUTTON_SELECTORS = {
     generic: [
         'button[aria-label*="Skip"]',
         'button[aria-label*="Überspringen"]',
+        '[aria-label*="überspringen"]',
         'button[class*="skip-intro" i]',
         'button[class*="skip-recap" i]',
         'button[class*="skip-credits" i]',
         'button[id*="skip-intro" i]',
         'button[id*="skip-recap" i]',
-        // Buttons mit bestimmtem Text-Content
+        // Buttons/Divs mit bestimmtem Text-Content
         'button:has-text("Skip Intro")',
         'button:has-text("Skip")',
         'button:has-text("Skip Recap")',
         'button:has-text("Skip Credits")',
         'button:has-text("Intro überspringen")',
+        'button:has-text("Opening überspringen")',
         'button:has-text("Vorspann überspringen")',
         'button:has-text("Zusammenfassung überspringen")',
-        'button:has-text("Rückblick überspringen")'
+        'button:has-text("Rückblick überspringen")',
+        'button:has-text("Abspann überspringen")'
     ]
 };
 
@@ -109,7 +127,7 @@ function getPlatform(hostname) {
     if (hostname.includes('disneyplus.com') || hostname.includes('disney+')) return 'disney';
     if (hostname.includes('amazon.com') || hostname.includes('primevideo.com')) return 'amazon';
     if (hostname.includes('youtube.com')) return 'youtube';
-    if (hostname.includes('crunchyroll.com')) return 'crunchyroll';
+    if (hostname.includes('crunchyroll.com') || hostname.includes('static.crunchyroll.com')) return 'crunchyroll';
     if (hostname.includes('hbo.com') || hostname.includes('hbomax.com')) return 'hbo';
     if (hostname.includes('tv.apple.com')) return 'appletv';
     if (hostname.includes('paramountplus.com')) return 'paramount';
@@ -475,7 +493,11 @@ class IntroSkipper {
                     buttonText.includes('rückblick') ||
                     buttonText.includes('zusammenfassung') ||
                     buttonText.includes('credits') ||
-                    button.getAttribute('data-uia')?.includes('recap');
+                    buttonText.includes('abspann') ||
+                    button.getAttribute('data-uia')?.includes('recap') ||
+                    button.getAttribute('data-testid')?.includes('recap') ||
+                    button.getAttribute('data-testid')?.includes('Recap') ||
+                    button.getAttribute('data-t')?.includes('recap');
 
                 // Wenn es ein Recap ist, nur klicken wenn Recap-Skip aktiviert
                 if (isRecap && !this.skipRecapEnabled) {
@@ -485,8 +507,12 @@ class IntroSkipper {
                 // Wenn es ein Intro ist, nur klicken wenn Intro-Skip aktiviert
                 // Default assumption: if not explicitly recap, it might be intro
                 const isIntro = buttonText.includes('intro') ||
+                    buttonText.includes('opening') ||
                     buttonText.includes('vorspann') ||
-                    button.getAttribute('data-uia')?.includes('intro');
+                    button.getAttribute('data-uia')?.includes('intro') ||
+                    button.getAttribute('data-testid')?.includes('intro') ||
+                    button.getAttribute('data-testid')?.includes('Intro') ||
+                    button.getAttribute('data-t')?.includes('intro');
 
                 // If it looks like intro (or generic/unknown) but intro skip is disabled, skip it
                 // If it's generic and we don't know, we assume intro skip controls it? 
@@ -504,12 +530,13 @@ class IntroSkipper {
 
 
     findButtonByText(text) {
-        const buttons = document.querySelectorAll('button, a'); // Also look for anchor tags for Next Episode
-        for (const button of buttons) {
-            const buttonText = button.textContent.trim().toLowerCase();
+        // Crunchyroll uses div elements, not buttons - search more broadly
+        const elements = document.querySelectorAll('button, a, div[tabindex], span[tabindex], [role="button"], div[data-testid*="skip"], div[class*="skip"]');
+        for (const element of elements) {
+            const elementText = element.textContent.trim().toLowerCase();
             const searchText = text.toLowerCase();
-            if (buttonText.includes(searchText)) {
-                return button;
+            if (elementText.includes(searchText)) {
+                return element;
             }
         }
         return null;
