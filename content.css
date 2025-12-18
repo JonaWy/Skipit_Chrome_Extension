@@ -1,0 +1,56 @@
+/* OSD - Apple Style Frosted Glass */
+.vsc-osd {
+    /* Position */
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999999;
+
+    /* Layout */
+    padding: 12px 24px;
+    min-width: 80px;
+
+    /* Styling */
+    background: rgba(0, 0, 0, 0.75);
+    /* Translucent black */
+    backdrop-filter: blur(20px);
+    /* Apple's frosted glass effect */
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 16px;
+
+    /* Typography */
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    color: #FFFFFF;
+    text-align: center;
+    letter-spacing: 0.5px;
+
+    /* Shadow */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    /* Subtle inner border */
+
+    /* Animation */
+    opacity: 1;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+}
+
+.vsc-osd-hidden {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+}
+
+/* Keyframes for entrance, though transition handles the class toggle */
+@keyframes osdFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

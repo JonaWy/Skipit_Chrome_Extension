@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Video Speed Controller+ Einstellungen</title>
+    <link rel="stylesheet" href="options.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <!-- Back button isn't functional in standard options page usually unless in sub-view, 
+                 but prompt requested it. It could close tab or go back in history. -->
+            <!-- <button class="back-button">← Zurück</button> -->
+            <h1 class="page-title">Einstellungen</h1>
+        </div>
+
+        <!-- Appearance Card -->
+        <div class="settings-card">
+            <h2 class="card-title">Erscheinungsbild</h2>
+            <label class="toggle-container">
+                <span class="toggle-label">Dark Mode</span>
+                <input type="checkbox" id="darkMode" class="toggle-checkbox">
+                <span class="toggle-switch"></span>
+            </label>
+        </div>
+
+        <!-- Shortcuts Card -->
+        <div class="settings-card">
+            <h2 class="card-title">Tastaturkürzel</h2>
+            <div id="shortcutsContainer">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
+        <!-- Presets Card -->
+        <div class="settings-card">
+            <h2 class="card-title">Presets</h2>
+            <div id="presetsContainer">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
+        <!-- Auto-Skip Card -->
+        <div class="settings-card">
+            <h2 class="card-title">Auto-Skip</h2>
+
+            <label class="toggle-container">
+                <span class="toggle-label">Intro automatisch überspringen</span>
+                <input type="checkbox" id="introEnabled" class="toggle-checkbox">
+                <span class="toggle-switch"></span>
+            </label>
+
+            <label class="toggle-container">
+                <span class="toggle-label">Zusammenfassungen & Rückblicke überspringen</span>
+                <input type="checkbox" id="recapSkipEnabled" class="toggle-checkbox">
+                <span class="toggle-switch"></span>
+            </label>
+            <p class="description" style="margin-bottom: 16px;">
+                Überspringt automatisch "Previously on..." und "Recap" Buttons.
+            </p>
+
+            <div class="setting-item">
+                <label class="toggle-label" style="display:block; margin-bottom: 8px;">Verzögerung vor Klick
+                    (ms)</label>
+                <input type="number" id="clickDelay" min="0" max="5000" step="100" style="width: 120px;">
+            </div>
+
+            <label class="toggle-container">
+                <span class="toggle-label">Benachrichtigungen anzeigen</span>
+                <input type="checkbox" id="showNotifications" class="toggle-checkbox">
+                <span class="toggle-switch"></span>
+            </label>
+
+            <label class="toggle-container">
+                <span class="toggle-label">Debug-Modus (Logs)</span>
+                <input type="checkbox" id="debugMode" class="toggle-checkbox">
+                <span class="toggle-switch"></span>
+            </label>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="settings-card">
+            <h2 class="card-title">Statistiken</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <span class="stat-label">Intros</span>
+                    <span class="stat-value" id="statIntros">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Recaps</span>
+                    <span class="stat-value" id="statRecaps">0</span>
+                </div>
+            </div>
+            <button id="resetStats" class="secondary-button"
+                style="width: 100%; margin-top: 12px;">Zurücksetzen</button>
+        </div>
+
+        <!-- OSD Card -->
+        <div class="settings-card">
+            <h2 class="card-title">Speed Overlay (OSD)</h2>
+
+            <label class="toggle-container">
+                <span class="toggle-label">Overlay anzeigen</span>
+                <input type="checkbox" id="osdEnabled" class="toggle-checkbox">
+                <span class="toggle-switch"></span>
+            </label>
+
+            <div class="setting-item" style="margin-top: 16px;">
+                <label class="toggle-label" style="display:block; margin-bottom: 8px;">Position</label>
+                <select id="osdPosition">
+                    <option value="top-right">Oben Rechts</option>
+                    <option value="top-left">Oben Links</option>
+                    <option value="bottom-right">Unten Rechts</option>
+                    <option value="bottom-left">Unten Links</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <button id="resetBtn" class="secondary-button">Standardwerte</button>
+            <button id="saveBtn" class="primary-button">Speichern</button>
+        </div>
+    </div>
+    <script src="options.js"></script>
+</body>
+
+</html>

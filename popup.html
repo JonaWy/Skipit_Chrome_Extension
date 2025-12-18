@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Video Speed Controller+</h1>
+        </header>
+
+        <section class="speed-display-section">
+            <span id="speedValue">1.00x</span>
+        </section>
+
+        <div class="slider-container">
+            <input type="range" id="speedSlider" min="0.25" max="4.0" step="0.05" value="1.0">
+            <div class="slider-labels">
+                <span>0.25x</span>
+                <span>4.00x</span>
+            </div>
+        </div>
+
+        <section class="presets-section">
+            <div class="section-title">Presets</div>
+            <div id="presetContainer" class="presets-grid">
+                <!-- Filled by JS -->
+            </div>
+        </section>
+
+        <button id="openOptions" class="footer-link">
+            <span style="font-size: 13px; font-weight: 500;">Einstellungen</span>
+        </button>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>
