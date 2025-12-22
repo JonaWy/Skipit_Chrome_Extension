@@ -127,14 +127,6 @@ const SKIP_BUTTON_SELECTORS = {
     '[data-t="skip-recap-button"]',
   ],
 
-  // HBO Max
-  hbo: [
-    '[aria-label="Skip Intro"]',
-    '[aria-label="Skip Recap"]',
-    '[aria-label="Skip Credits"]',
-    'button[class*="SkipButton"]',
-  ],
-
   // Apple TV+
   appletv: [
     'button[aria-label*="Skip Intro"]',
@@ -148,13 +140,6 @@ const SKIP_BUTTON_SELECTORS = {
     '[aria-label*="Skip Intro"]',
     '[aria-label*="Skip Recap"]',
     'button[class*="skip"]',
-  ],
-
-  // Peacock
-  peacock: [
-    '[aria-label*="Skip Intro"]',
-    '[aria-label*="Skip Recap"]',
-    'button[data-test*="skip"]',
   ],
 
   // Generische Selektoren (funktionieren auf vielen Seiten)
@@ -188,10 +173,8 @@ const SUPPORTED_STREAMING_PLATFORMS = [
   "disney",
   "amazon",
   "crunchyroll",
-  "hbo",
   "appletv",
   "paramount",
-  "peacock",
 ];
 
 // Point 7: Cached getPlatform() - only recalculates when hostname changes
@@ -214,11 +197,8 @@ function getPlatform(hostname) {
     hostname.includes("static.crunchyroll.com")
   )
     cachedPlatform = "crunchyroll";
-  else if (hostname.includes("hbo.com") || hostname.includes("hbomax.com"))
-    cachedPlatform = "hbo";
   else if (hostname.includes("tv.apple.com")) cachedPlatform = "appletv";
   else if (hostname.includes("paramountplus.com")) cachedPlatform = "paramount";
-  else if (hostname.includes("peacocktv.com")) cachedPlatform = "peacock";
   else cachedPlatform = "generic";
 
   return cachedPlatform;
@@ -569,10 +549,8 @@ function showUpgradePrompt(platform) {
     disney: "Disney+",
     amazon: "Amazon Prime Video",
     crunchyroll: "Crunchyroll",
-    hbo: "HBO Max",
     appletv: "Apple TV+",
     paramount: "Paramount+",
-    peacock: "Peacock",
   };
 
   const platformName = platformNames[platform] || platform;
@@ -794,11 +772,9 @@ class IntroSkipper {
       disney: ["/video/", "/play/", "/watch", "/episode", "/movie"],
       netflix: ["/watch/"],
       amazon: ["/watch/", "/detail/", "/gp/video/"],
-      hbo: ["/player/", "/episode/"],
       crunchyroll: ["/watch/"],
       appletv: ["/episode/", "/movie/"],
       paramount: ["/video/"],
-      peacock: ["/watch/"],
     };
 
     const patterns = playbackPatterns[platform] || [];

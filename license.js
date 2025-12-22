@@ -233,10 +233,8 @@ const License = {
         "disney",
         "amazon",
         "crunchyroll",
-        "hbo",
         "appletv",
         "paramount",
-        "peacock",
       ];
     }
     return FREE_PLATFORMS;

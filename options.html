@@ -72,7 +72,7 @@
           <div class="upgrade-text">
             <h3>Upgrade to SkipIt Pro</h3>
             <p>
-              Unlock all 9 streaming platforms, speeds from 0.25x to 4x, and
+              Unlock all 7 streaming platforms, speeds from 0.25x to 4x, and
               more!
             </p>
           </div>
@@ -164,61 +164,108 @@
         </div>
       </div>
 
-      <!-- Auto-Skip Card -->
-      <div class="settings-card">
-        <h2 class="card-title">Auto-Skip (Advanced)</h2>
-
-        <div class="setting-item">
-          <label class="toggle-label" style="display: block; margin-bottom: 8px"
-            >Click Delay (ms)</label
+      <!-- Advanced Settings Collapsible Section -->
+      <div class="collapsible-section">
+        <button
+          class="collapsible-header"
+          id="advancedSettingsToggle"
+          aria-expanded="false"
+        >
+          <span class="collapsible-title">Advanced Settings</span>
+          <svg
+            class="collapsible-icon"
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           >
-          <input
-            type="number"
-            id="clickDelay"
-            min="0"
-            max="5000"
-            step="100"
-            style="width: 120px"
-          />
-        </div>
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
 
-        <label class="toggle-container">
-          <span class="toggle-label">Show Notifications</span>
-          <input
-            type="checkbox"
-            id="showNotifications"
-            class="toggle-checkbox"
-          />
-          <span class="toggle-switch"></span>
-        </label>
+        <div class="collapsible-content" id="advancedSettingsContent">
+          <!-- Auto-Skip Card -->
+          <div class="settings-card">
+            <h2 class="card-title">Auto-Skip</h2>
 
-        <label class="toggle-container">
-          <span class="toggle-label">Debug Mode (Logs)</span>
-          <input type="checkbox" id="debugMode" class="toggle-checkbox" />
-          <span class="toggle-switch"></span>
-        </label>
-      </div>
+            <div class="setting-item">
+              <label
+                class="toggle-label"
+                style="display: block; margin-bottom: 4px"
+                >Click Delay (ms)</label
+              >
+              <p class="setting-helper">
+                Wait time before clicking skip buttons. Increase if skips
+                trigger too early.
+              </p>
+              <input
+                type="number"
+                id="clickDelay"
+                min="0"
+                max="5000"
+                step="100"
+                style="width: 120px"
+              />
+            </div>
 
-      <!-- OSD Card -->
-      <div class="settings-card">
-        <h2 class="card-title">Speed Overlay (OSD)</h2>
+            <label class="toggle-container has-helper">
+              <div class="toggle-info">
+                <span class="toggle-label">Show Notifications</span>
+                <span class="setting-helper"
+                  >Display a brief message when intros or recaps are
+                  skipped.</span
+                >
+              </div>
+              <input
+                type="checkbox"
+                id="showNotifications"
+                class="toggle-checkbox"
+              />
+              <span class="toggle-switch"></span>
+            </label>
 
-        <label class="toggle-container">
-          <span class="toggle-label">Show Overlay</span>
-          <input type="checkbox" id="osdEnabled" class="toggle-checkbox" />
-          <span class="toggle-switch"></span>
-        </label>
+            <label class="toggle-container has-helper">
+              <div class="toggle-info">
+                <span class="toggle-label">Debug Mode</span>
+                <span class="setting-helper"
+                  >Log skip detection details to browser console for
+                  troubleshooting.</span
+                >
+              </div>
+              <input type="checkbox" id="debugMode" class="toggle-checkbox" />
+              <span class="toggle-switch"></span>
+            </label>
+          </div>
 
-        <div class="setting-item" style="margin-top: 16px">
-          <label class="toggle-label" style="display: block; margin-bottom: 8px"
-            >Position</label
-          >
-          <select id="osdPosition">
-            <option value="top-right">Top Right</option>
-            <option value="top-left">Top Left</option>
-            <option value="bottom-right">Bottom Right</option>
-            <option value="bottom-left">Bottom Left</option>
-          </select>
+          <!-- OSD Card -->
+          <div class="settings-card">
+            <h2 class="card-title">Speed Overlay (OSD)</h2>
+
+            <label class="toggle-container">
+              <span class="toggle-label">Show Overlay</span>
+              <input type="checkbox" id="osdEnabled" class="toggle-checkbox" />
+              <span class="toggle-switch"></span>
+            </label>
+
+            <div class="setting-item" style="margin-top: 16px">
+              <label
+                class="toggle-label"
+                style="display: block; margin-bottom: 8px"
+                >Position</label
+              >
+              <select id="osdPosition">
+                <option value="top-right">Top Right</option>
+                <option value="top-left">Top Left</option>
+                <option value="bottom-right">Bottom Right</option>
+                <option value="bottom-left">Bottom Left</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 

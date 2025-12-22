@@ -15,10 +15,8 @@ const supportedSites = [
     { id: 'disney', name: 'Disney+' },
     { id: 'amazon', name: 'Prime Video' },
     { id: 'crunchyroll', name: 'Crunchyroll' },
-    { id: 'hbo', name: 'HBO Max' },
     { id: 'appletv', name: 'Apple TV+' },
-    { id: 'paramount', name: 'Paramount+' },
-    { id: 'peacock', name: 'Peacock' }
+    { id: 'paramount', name: 'Paramount+' }
 ];
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -52,6 +50,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         chrome.storage.sync.set({ darkMode: isDark });
         // Notify other extension pages (popup) about the theme change
         chrome.runtime.sendMessage({ action: 'themeChanged', darkMode: isDark });
+    });
+    
+    // Advanced settings collapsible section
+    const advancedToggle = document.getElementById('advancedSettingsToggle');
+    const advancedContent = document.getElementById('advancedSettingsContent');
+    
+    advancedToggle?.addEventListener('click', () => {
+        const isExpanded = advancedToggle.getAttribute('aria-expanded') === 'true';
+        advancedToggle.setAttribute('aria-expanded', !isExpanded);
+        advancedContent.classList.toggle('expanded', !isExpanded);
+        
+        // Save preference
+        chrome.storage.local.set({ advancedSettingsExpanded: !isExpanded });
+    });
+    
+    // Restore collapsed state preference
+    chrome.storage.local.get('advancedSettingsExpanded', (data) => {
+        if (data.advancedSettingsExpanded === true) {
+            advancedToggle?.setAttribute('aria-expanded', 'true');
+            advancedContent?.classList.add('expanded');
+        }
     });
     
     // Listen for theme changes from popup

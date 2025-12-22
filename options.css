@@ -253,6 +253,33 @@ body.dark-mode .theme-toggle:hover {
   margin-bottom: 0;
 }
 
+/* Setting Helper Text */
+.setting-helper {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+  display: block;
+}
+
+.toggle-container.has-helper {
+  flex-wrap: wrap;
+}
+
+.toggle-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.toggle-info .toggle-label {
+  display: block;
+  margin-bottom: 2px;
+}
+
+.toggle-info .setting-helper {
+  margin-bottom: 0;
+}
+
 /* Input Fields */
 input[type="text"],
 input[type="number"],
@@ -586,4 +613,73 @@ body.dark-mode .toggle-switch {
 /* Dark mode subscription card */
 body.dark-mode .subscription-card {
   border-color: #4164d8;
+}
+
+/* Collapsible Section */
+.collapsible-section {
+  margin-bottom: 20px;
+}
+
+.collapsible-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.collapsible-header:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+.collapsible-title {
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.collapsible-icon {
+  color: var(--color-text-tertiary);
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.collapsible-header[aria-expanded="true"] .collapsible-icon {
+  transform: rotate(180deg);
+}
+
+.collapsible-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+  opacity: 0;
+}
+
+.collapsible-content.expanded {
+  max-height: 1000px;
+  opacity: 1;
+  padding-top: 16px;
+}
+
+.collapsible-content .settings-card:last-child {
+  margin-bottom: 0;
+}
+
+/* Dark mode collapsible */
+body.dark-mode .collapsible-header {
+  background: var(--color-bg-primary);
+  border-color: var(--color-border);
+}
+
+body.dark-mode .collapsible-header:hover {
+  background: var(--color-bg-tertiary);
 }
