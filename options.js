@@ -6,29 +6,69 @@ const defaultSettings = {
 };
 
 const shortcutLabels = {
-    faster: "Schneller (+0.25)",
-    slower: "Langsamer (-0.25)"
+    faster: "Faster (+0.25)",
+    slower: "Slower (-0.25)"
 };
 const supportedSites = [
     { id: 'netflix', name: 'Netflix' },
+    { id: 'youtube', name: 'YouTube' },
     { id: 'disney', name: 'Disney+' },
     { id: 'amazon', name: 'Prime Video' },
-    { id: 'youtube', name: 'YouTube' },
     { id: 'crunchyroll', name: 'Crunchyroll' },
     { id: 'hbo', name: 'HBO Max' },
     { id: 'appletv', name: 'Apple TV+' },
     { id: 'paramount', name: 'Paramount+' },
-    { id: 'peacock', name: 'Peacock' },
-    { id: 'generic', name: 'Andere Webseiten' }
+    { id: 'peacock', name: 'Peacock' }
 ];
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize license checking
+    await License.checkFromStorage();
+    
+    // Update UI based on license status
+    updateLicenseUI();
+    
     loadSettings();
 
     // document.getElementById('saveBtn') is removed
     document.getElementById('resetBtn').addEventListener('click', resetSettings);
     document.getElementById('resetStats').addEventListener('click', resetStats);
+    
+    // Upgrade button handler
+    document.getElementById('upgradeBtn')?.addEventListener('click', () => {
+        chrome.runtime.sendMessage({ action: 'openUpgradePage' });
+    });
+    
+    // Manage subscription button handler (for premium users)
+    document.getElementById('manageSubscriptionBtn')?.addEventListener('click', () => {
+        // Opens the same ExtPay page, which shows subscription management for paid users
+        chrome.runtime.sendMessage({ action: 'openUpgradePage' });
+    });
 });
+
+function updateLicenseUI() {
+    const premiumBadge = document.getElementById('premiumBadge');
+    const upgradeCard = document.getElementById('upgradeCard');
+    const subscriptionCard = document.getElementById('subscriptionCard');
+    const platformsPremiumTag = document.getElementById('platformsPremiumTag');
+    const platformsHint = document.getElementById('platformsHint');
+    
+    if (License.isPremium) {
+        // Premium user
+        if (premiumBadge) premiumBadge.style.display = 'inline-block';
+        if (upgradeCard) upgradeCard.style.display = 'none';
+        if (subscriptionCard) subscriptionCard.style.display = 'block';
+        if (platformsPremiumTag) platformsPremiumTag.style.display = 'none';
+        if (platformsHint) platformsHint.style.display = 'none';
+    } else {
+        // Free user
+        if (premiumBadge) premiumBadge.style.display = 'none';
+        if (upgradeCard) upgradeCard.style.display = 'block';
+        if (subscriptionCard) subscriptionCard.style.display = 'none';
+        if (platformsPremiumTag) platformsPremiumTag.style.display = 'inline-block';
+        if (platformsHint) platformsHint.style.display = 'block';
+    }
+}
 
 function debounce(func, wait) {
     let timeout;
@@ -107,17 +147,33 @@ function loadSettings() {
         sContainer.innerHTML = '';
         const siteSettings = settings.siteSettings || {};
 
+        // Free platforms (available without premium)
+        const freePlatforms = ['netflix', 'youtube'];
+
         supportedSites.forEach(site => {
             const isEnabled = siteSettings[site.id] !== false; // Default true
+            const isLocked = !License.isPremium && !freePlatforms.includes(site.id);
+            
             const div = document.createElement('label');
-            // Reusing toggle-container style from HTML structure logic
-            div.className = 'toggle-container';
+            div.className = 'toggle-container service-item' + (isLocked ? ' locked' : '');
+            
+            const lockIcon = isLocked ? '<span class="pro-tag">PRO</span>' : '';
+            const disabledAttr = isLocked ? 'disabled' : '';
+            
             div.innerHTML = `
-                <span class="toggle-label">${site.name}</span>
-                <input type="checkbox" id="site_${site.id}" class="toggle-checkbox" ${isEnabled ? 'checked' : ''}>
+                <span class="toggle-label">${site.name}${lockIcon}</span>
+                <input type="checkbox" id="site_${site.id}" class="toggle-checkbox" ${isEnabled && !isLocked ? 'checked' : ''} ${disabledAttr}>
                 <span class="toggle-switch"></span>
             `;
             sContainer.appendChild(div);
+            
+            // If locked, show upgrade prompt on click
+            if (isLocked) {
+                div.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    chrome.runtime.sendMessage({ action: 'openUpgradePage' });
+                });
+            }
         });
 
         // Auto Skip Static Inputs
@@ -224,7 +280,7 @@ function resetSettings() {
 }
 
 function resetStats() {
-    if (confirm('Statistiken zurücksetzen?')) {
+    if (confirm('Reset statistics?')) {
         chrome.storage.sync.set({
             stats: {
                 introsSkipped: 0,

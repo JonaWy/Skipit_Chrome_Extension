@@ -1,117 +1,187 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>SkipIt Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Video Speed Controller+ Einstellungen</title>
-    <link rel="stylesheet" href="options.css">
-</head>
-
-<body>
+  <body>
     <div class="container">
-        <div class="header">
-            <!-- Back button isn't functional in standard options page usually unless in sub-view, 
-                 but prompt requested it. It could close tab or go back in history. -->
-            <!-- <button class="back-button">← Zurück</button> -->
-            <h1 class="page-title">Einstellungen</h1>
-        </div>
+      <div class="header">
+        <h1 class="page-title">
+          Settings
+          <span id="premiumBadge" class="premium-badge" style="display: none"
+            >PRO</span
+          >
+        </h1>
+      </div>
 
-
-
-        <!-- Shortcuts Card -->
-        <div class="settings-card">
-            <h2 class="card-title">Tastaturkürzel</h2>
-            <div id="shortcutsContainer">
-                <!-- Filled by JS -->
-            </div>
-        </div>
-
-        <!-- Presets Card -->
-        <div class="settings-card">
-            <h2 class="card-title">Presets</h2>
-            <div id="presetsContainer">
-                <!-- Filled by JS -->
-            </div>
-        </div>
-
-        <!-- Streaming Services Card -->
-        <div class="settings-card">
-            <h2 class="card-title">Streaming-Dienste</h2>
-            <p class="description" style="margin-bottom: 16px;">
-                App für bestimmte Dienste aktivieren/deaktivieren.
+      <!-- Upgrade Card (shown for free users) -->
+      <div
+        id="upgradeCard"
+        class="settings-card upgrade-card"
+        style="display: none"
+      >
+        <div class="upgrade-content">
+          <div class="upgrade-icon">🚀</div>
+          <div class="upgrade-text">
+            <h3>Upgrade to SkipIt Pro</h3>
+            <p>
+              Unlock all 9 streaming platforms, speeds from 0.25x to 4x, and
+              more!
             </p>
-            <div id="servicesContainer">
-                <!-- Filled by JS -->
+          </div>
+          <button id="upgradeBtn" class="primary-button">Upgrade Now</button>
+        </div>
+      </div>
+
+      <!-- Subscription Management Card (shown for premium users) -->
+      <div
+        id="subscriptionCard"
+        class="settings-card subscription-card"
+        style="display: none"
+      >
+        <div class="subscription-content">
+          <div class="subscription-header">
+            <span class="subscription-icon">✨</span>
+            <div class="subscription-info">
+              <h3>SkipIt Pro</h3>
+              <p class="subscription-status">Active Subscription</p>
             </div>
+          </div>
+          <button id="manageSubscriptionBtn" class="secondary-button">
+            Manage Subscription
+          </button>
+        </div>
+      </div>
+
+      <!-- Shortcuts Card -->
+      <div class="settings-card">
+        <h2 class="card-title">Keyboard Shortcuts</h2>
+        <div id="shortcutsContainer">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- Presets Card -->
+      <div class="settings-card">
+        <h2 class="card-title">Presets</h2>
+        <div id="presetsContainer">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- Streaming Services Card -->
+      <div class="settings-card">
+        <h2 class="card-title">
+          Streaming Services
+          <span
+            class="premium-feature-tag"
+            id="platformsPremiumTag"
+            style="display: none"
+            >PRO</span
+          >
+        </h2>
+        <p class="description" style="margin-bottom: 16px">
+          Enable or disable the app for specific services.
+          <span id="platformsHint" class="free-hint" style="display: none"
+            >Free: Netflix & YouTube only</span
+          >
+        </p>
+        <div id="servicesContainer">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- Auto-Skip Card -->
+      <div class="settings-card">
+        <h2 class="card-title">Auto-Skip (Advanced)</h2>
+
+        <div class="setting-item">
+          <label class="toggle-label" style="display: block; margin-bottom: 8px"
+            >Click Delay (ms)</label
+          >
+          <input
+            type="number"
+            id="clickDelay"
+            min="0"
+            max="5000"
+            step="100"
+            style="width: 120px"
+          />
         </div>
 
-        <!-- Auto-Skip Card -->
-        <div class="settings-card">
-            <h2 class="card-title">Auto-Skip (Erweitert)</h2>
+        <label class="toggle-container">
+          <span class="toggle-label">Show Notifications</span>
+          <input
+            type="checkbox"
+            id="showNotifications"
+            class="toggle-checkbox"
+          />
+          <span class="toggle-switch"></span>
+        </label>
 
-            <div class="setting-item">
-                <label class="toggle-label" style="display:block; margin-bottom: 8px;">Verzögerung vor Klick
-                    (ms)</label>
-                <input type="number" id="clickDelay" min="0" max="5000" step="100" style="width: 120px;">
-            </div>
+        <label class="toggle-container">
+          <span class="toggle-label">Debug Mode (Logs)</span>
+          <input type="checkbox" id="debugMode" class="toggle-checkbox" />
+          <span class="toggle-switch"></span>
+        </label>
+      </div>
 
-            <label class="toggle-container">
-                <span class="toggle-label">Benachrichtigungen anzeigen</span>
-                <input type="checkbox" id="showNotifications" class="toggle-checkbox">
-                <span class="toggle-switch"></span>
-            </label>
-
-            <label class="toggle-container">
-                <span class="toggle-label">Debug-Modus (Logs)</span>
-                <input type="checkbox" id="debugMode" class="toggle-checkbox">
-                <span class="toggle-switch"></span>
-            </label>
+      <!-- Stats Card -->
+      <div class="settings-card">
+        <h2 class="card-title">Statistics</h2>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-label">Intros</span>
+            <span class="stat-value" id="statIntros">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Recaps</span>
+            <span class="stat-value" id="statRecaps">0</span>
+          </div>
         </div>
+        <button
+          id="resetStats"
+          class="secondary-button"
+          style="width: 100%; margin-top: 12px"
+        >
+          Reset
+        </button>
+      </div>
 
-        <!-- Stats Card -->
-        <div class="settings-card">
-            <h2 class="card-title">Statistiken</h2>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <span class="stat-label">Intros</span>
-                    <span class="stat-value" id="statIntros">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-label">Recaps</span>
-                    <span class="stat-value" id="statRecaps">0</span>
-                </div>
-            </div>
-            <button id="resetStats" class="secondary-button"
-                style="width: 100%; margin-top: 12px;">Zurücksetzen</button>
+      <!-- OSD Card -->
+      <div class="settings-card">
+        <h2 class="card-title">Speed Overlay (OSD)</h2>
+
+        <label class="toggle-container">
+          <span class="toggle-label">Show Overlay</span>
+          <input type="checkbox" id="osdEnabled" class="toggle-checkbox" />
+          <span class="toggle-switch"></span>
+        </label>
+
+        <div class="setting-item" style="margin-top: 16px">
+          <label class="toggle-label" style="display: block; margin-bottom: 8px"
+            >Position</label
+          >
+          <select id="osdPosition">
+            <option value="top-right">Top Right</option>
+            <option value="top-left">Top Left</option>
+            <option value="bottom-right">Bottom Right</option>
+            <option value="bottom-left">Bottom Left</option>
+          </select>
         </div>
+      </div>
 
-        <!-- OSD Card -->
-        <div class="settings-card">
-            <h2 class="card-title">Speed Overlay (OSD)</h2>
-
-            <label class="toggle-container">
-                <span class="toggle-label">Overlay anzeigen</span>
-                <input type="checkbox" id="osdEnabled" class="toggle-checkbox">
-                <span class="toggle-switch"></span>
-            </label>
-
-            <div class="setting-item" style="margin-top: 16px;">
-                <label class="toggle-label" style="display:block; margin-bottom: 8px;">Position</label>
-                <select id="osdPosition">
-                    <option value="top-right">Oben Rechts</option>
-                    <option value="top-left">Oben Links</option>
-                    <option value="bottom-right">Unten Rechts</option>
-                    <option value="bottom-left">Unten Links</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Actions -->
-        <div class="actions">
-            <button id="resetBtn" class="secondary-button" style="width: 100%;">Einstellungen zurücksetzen</button>
-        </div>
+      <!-- Actions -->
+      <div class="actions">
+        <button id="resetBtn" class="secondary-button" style="width: 100%">
+          Reset Settings
+        </button>
+      </div>
     </div>
+    <script src="license.js"></script>
     <script src="options.js"></script>
-</body>
-
+  </body>
 </html>

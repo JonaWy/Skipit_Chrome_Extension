@@ -1,8 +1,54 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const speedSlider = document.getElementById('speedSlider');
     const speedDisplay = document.getElementById('speedValue');
     const presetContainer = document.getElementById('presetContainer');
     const openOptions = document.getElementById('openOptions');
+    const upgradeBanner = document.getElementById('upgradeBanner');
+    const upgradeBtn = document.getElementById('upgradeBtn');
+    const premiumBadge = document.getElementById('premiumBadge');
+    const sliderMin = document.getElementById('sliderMin');
+    const sliderMax = document.getElementById('sliderMax');
+
+    // Initialize license checking
+    await License.checkFromStorage();
+    
+    // Update UI based on license status
+    updateLicenseUI();
+
+    function updateLicenseUI() {
+        if (License.isPremium) {
+            // Premium user
+            premiumBadge.style.display = 'inline-block';
+            upgradeBanner.style.display = 'none';
+            
+            // Unlock full speed range
+            speedSlider.min = '0.25';
+            speedSlider.max = '4.0';
+            sliderMin.textContent = '0.25x';
+            sliderMax.textContent = '4.0x';
+            
+            // Remove free-tier class
+            speedSlider.parentElement.classList.remove('free-tier');
+        } else {
+            // Free user
+            premiumBadge.style.display = 'none';
+            upgradeBanner.style.display = 'flex';
+            
+            // Limit speed range
+            speedSlider.min = '1.0';
+            speedSlider.max = '2.0';
+            sliderMin.textContent = '1.0x';
+            sliderMax.textContent = '2.0x';
+            
+            // Add free-tier class
+            speedSlider.parentElement.classList.add('free-tier');
+        }
+    }
+
+    // Upgrade button handler
+    upgradeBtn?.addEventListener('click', () => {
+        chrome.runtime.sendMessage({ action: 'openUpgradePage' });
+    });
 
     // Load Settings & Presets
     chrome.storage.sync.get(['presets', 'presetNames', 'darkMode', 'autoSkip'], (data) => {
@@ -56,16 +102,22 @@ document.addEventListener('DOMContentLoaded', () => {
         presets.forEach((val, idx) => {
             const card = document.createElement('div');
             card.className = 'preset-card';
-            // Use name if short, else value? Design has values like "1.25". 
-            // If user named it "Speed 1.5x" it might be long. 
-            // Let's stick to values for the card display as per ASCII art, or try to use name if fits.
-            // The prompt ASCII shows "1.25", "1.50". 
-            // The user settings might have names.
-            // I'll show the value formatted nicely.
+            
+            // Check if preset is within allowed range for free users
+            const isLocked = !License.canUseSpeed(val);
+            if (isLocked) {
+                card.classList.add('locked');
+            }
+            
             card.textContent = formatSpeed(val);
             card.dataset.speed = val;
 
             card.addEventListener('click', () => {
+                if (isLocked) {
+                    // Show upgrade prompt for locked presets
+                    chrome.runtime.sendMessage({ action: 'openUpgradePage' });
+                    return;
+                }
                 setSpeed(val);
             });
             presetContainer.appendChild(card);
@@ -101,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Maybe show message?
         const msg = document.createElement('div');
-        msg.textContent = "Erweiterung ist für diese Seite deaktiviert.";
+        msg.textContent = "Extension is disabled for this site.";
         msg.style.cssText = "text-align: center; color: var(--color-error); font-size: 13px; margin-top: 10px;";
         document.querySelector('.speed-display-section').appendChild(msg);
     }
@@ -162,8 +214,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function setSpeed(speed, updateSlider = true) {
-        // Bounds
-        speed = Math.max(0.25, Math.min(4.0, speed));
+        // Apply license-based bounds
+        speed = License.clampSpeed(speed);
         speed = Math.round(speed * 100) / 100;
 
         if (updateSlider) updateUI(speed);

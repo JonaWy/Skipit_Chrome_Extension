@@ -1,3 +1,47 @@
+// Import ExtPay for payment processing
+// See: https://github.com/glench/ExtPay
+importScripts('ExtPay.js');
+
+// Initialize ExtPay with your extension ID from extensionpay.com
+const extpay = ExtPay('skipit');
+
+// Start background payment checking
+extpay.startBackground();
+
+// Listen for payment events
+extpay.onPaid.addListener(user => {
+  console.log('[SkipIt] User paid! Activating premium...');
+  chrome.storage.local.set({ premiumStatus: true }, () => {
+    // Notify all tabs about license change
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach(tab => {
+        chrome.tabs.sendMessage(tab.id, {
+          action: "licenseUpdated",
+          isPremium: true
+        }).catch(() => {});
+      });
+    });
+  });
+});
+
+// Sync premium status on extension startup
+async function syncPremiumStatus() {
+  try {
+    const user = await extpay.getUser();
+    const isPremium = user.paid === true;
+    await chrome.storage.local.set({ 
+      premiumStatus: isPremium,
+      lastLicenseCheck: Date.now()
+    });
+    console.log('[SkipIt] Premium status synced:', isPremium ? 'PREMIUM' : 'FREE');
+  } catch (error) {
+    console.error('[SkipIt] Failed to sync premium status:', error);
+  }
+}
+
+// Sync on service worker startup
+syncPremiumStatus();
+
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     const defaultSettings = {
@@ -40,7 +84,12 @@ chrome.runtime.onInstalled.addListener((details) => {
     };
 
     chrome.storage.sync.set(defaultSettings, () => {
-      console.log('Default settings saved');
+      console.log('[SkipIt] Default settings saved');
+    });
+
+    // Initialize premium status as false for new installs
+    chrome.storage.local.set({ premiumStatus: false }, () => {
+      console.log('[SkipIt] License initialized (Free tier)');
     });
   }
 });
@@ -56,5 +105,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         shiftKey: request.shiftKey
       });
     }
+  }
+  
+  // Handle upgrade page request
+  if (request.action === "openUpgradePage") {
+    // Open ExtensionPay payment page
+    extpay.openPaymentPage();
+  }
+  
+  // Handle license status request
+  if (request.action === "getLicenseStatus") {
+    chrome.storage.local.get(['premiumStatus'], (data) => {
+      sendResponse({ isPremium: data.premiumStatus === true });
+    });
+    return true; // Keep channel open for async response
+  }
+  
+  // Handle license change notification
+  if (request.action === "licenseChanged") {
+    // Broadcast to all tabs
+    chrome.tabs.query({}, (tabs) => {
+      tabs.forEach(tab => {
+        chrome.tabs.sendMessage(tab.id, {
+          action: "licenseUpdated",
+          isPremium: request.isPremium
+        }).catch(() => {});
+      });
+    });
   }
 });

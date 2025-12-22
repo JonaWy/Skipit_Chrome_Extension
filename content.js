@@ -145,15 +145,26 @@ function isSupportedStreamingPlatform() {
 }
 
 // Initialize
-chrome.storage.sync.get(null, (items) => {
+chrome.storage.sync.get(null, async (items) => {
     settings = items;
+    
+    // Initialize license checking
+    await License.checkFromStorage();
+    
     // Check if site is enabled
     const host = window.location.hostname;
     const platform = getPlatform(host);
 
     // Default to true if not present
     if (settings.siteSettings && settings.siteSettings[platform] === false) {
-        console.log('[Video Speed Controller+] Disabled on this site');
+        console.log('[SkipIt] Disabled on this site');
+        return;
+    }
+
+    // Check platform access (Free: Netflix/YouTube only)
+    if (!License.canUsePlatform(platform)) {
+        console.log('[SkipIt] Platform requires Premium:', platform);
+        showUpgradePrompt(platform);
         return;
     }
 
@@ -266,7 +277,7 @@ function handleKeydown(e) {
     const key = e.key;
 
     // Debug Log
-    if (settings.autoSkip?.debugMode) console.log(`[Video Speed Controller+] Key pressed: ${key} (Code: ${e.code})`);
+    if (settings.autoSkip?.debugMode) console.log(`[SkipIt] Key pressed: ${key} (Code: ${e.code})`);
 
     // Explicitly handle + and - keys as requested
     // Logic: + (Shift+= on US, + on DE, NumpadAdd) -> Faster
@@ -359,8 +370,9 @@ function changeSpeed(video, delta) {
 }
 
 function setSpeed(video, speed) {
-    // Bounds check
-    speed = Math.max(0.07, Math.min(16.0, speed)); // Chrome supports up to 16x generally, prompt said 0.25-4.0 but wide range is better
+    // Apply license-based speed limits
+    // Premium: 0.25 - 4.0, Free: 1.0 - 2.0
+    speed = License.clampSpeed(speed);
 
     // Round to 2 decimals to avoid floating point weirdness
     speed = Math.round(speed * 100) / 100;
@@ -428,6 +440,106 @@ function toggleOsd() {
 
     // Feedback
     if (settings.osd.enabled) showOsd(getTargetVideo() ? getTargetVideo().playbackRate : 1.0);
+}
+
+// Show upgrade prompt for non-premium users on premium platforms
+function showUpgradePrompt(platform) {
+    const platformNames = {
+        'disney': 'Disney+',
+        'amazon': 'Amazon Prime Video',
+        'crunchyroll': 'Crunchyroll',
+        'hbo': 'HBO Max',
+        'appletv': 'Apple TV+',
+        'paramount': 'Paramount+',
+        'peacock': 'Peacock'
+    };
+    
+    const platformName = platformNames[platform] || platform;
+    
+    // Create upgrade prompt overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'skipit-upgrade-prompt';
+    overlay.innerHTML = `
+        <div style="
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #4164D8, #6B8DD6);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(65, 100, 216, 0.4);
+            z-index: 999999;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 300px;
+            animation: skipitSlideIn 0.3s ease;
+        ">
+            <div style="font-weight: 600; font-size: 14px; margin-bottom: 8px;">
+                🚀 SkipIt Premium
+            </div>
+            <div style="font-size: 13px; opacity: 0.95; margin-bottom: 12px;">
+                Upgrade to use SkipIt on ${platformName} and 7 more streaming platforms!
+            </div>
+            <button id="skipit-upgrade-btn" style="
+                background: white;
+                color: #4164D8;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 6px;
+                font-weight: 600;
+                font-size: 12px;
+                cursor: pointer;
+                margin-right: 8px;
+            ">Upgrade Now</button>
+            <button id="skipit-dismiss-btn" style="
+                background: transparent;
+                color: white;
+                border: 1px solid rgba(255,255,255,0.3);
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                cursor: pointer;
+            ">Maybe Later</button>
+        </div>
+    `;
+    
+    // Add animation styles
+    if (!document.getElementById('skipit-upgrade-styles')) {
+        const style = document.createElement('style');
+        style.id = 'skipit-upgrade-styles';
+        style.textContent = `
+            @keyframes skipitSlideIn {
+                from { transform: translateX(100px); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes skipitSlideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100px); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(overlay);
+    
+    // Button handlers
+    document.getElementById('skipit-upgrade-btn')?.addEventListener('click', () => {
+        chrome.runtime.sendMessage({ action: 'openUpgradePage' });
+        overlay.remove();
+    });
+    
+    document.getElementById('skipit-dismiss-btn')?.addEventListener('click', () => {
+        overlay.querySelector('div').style.animation = 'skipitSlideOut 0.3s ease';
+        setTimeout(() => overlay.remove(), 280);
+    });
+    
+    // Auto-dismiss after 10 seconds
+    setTimeout(() => {
+        if (document.getElementById('skipit-upgrade-prompt')) {
+            overlay.querySelector('div').style.animation = 'skipitSlideOut 0.3s ease';
+            setTimeout(() => overlay.remove(), 280);
+        }
+    }, 10000);
 }
 
 // Listen for messages from Popup
@@ -530,7 +642,16 @@ class IntroSkipper {
         // Only run auto-skip on supported streaming platforms
         if (!isSupportedStreamingPlatform()) {
             if (settings.autoSkip?.debugMode) {
-                console.log('[Video Speed Controller+] Auto-Skip disabled: Not a supported streaming platform');
+                console.log('[SkipIt] Auto-Skip disabled: Not a supported streaming platform');
+            }
+            return;
+        }
+
+        // Check license: Free users can only use Auto-Skip on Netflix/YouTube
+        const platform = getPlatform(window.location.hostname);
+        if (!License.canUseAutoSkip(platform)) {
+            if (settings.autoSkip?.debugMode) {
+                console.log('[SkipIt] Auto-Skip on this platform requires Premium:', platform);
             }
             return;
         }
@@ -559,7 +680,7 @@ class IntroSkipper {
         });
 
         if (settings.autoSkip?.debugMode) {
-            console.log('[Video Speed Controller+] Auto-Skipper aktiviert');
+            console.log('[SkipIt] Auto-Skipper aktiviert');
             console.log('- Intro Skip:', this.enabled);
             console.log('- Recap Skip:', this.skipRecapEnabled);
         }
@@ -697,7 +818,7 @@ class IntroSkipper {
                 button.click();
                 this.markAsClicked(button);
 
-                if (settings.autoSkip?.debugMode) console.log(`[Video Speed Controller+] ${type}-Button geklickt (Selector: ${selector})`);
+                if (settings.autoSkip?.debugMode) console.log(`[SkipIt] ${type}-Button geklickt (Selector: ${selector})`);
 
                 // Optional: Visuelles Feedback (kurzes Highlight des Buttons)
                 this.highlightButton(button);
@@ -740,12 +861,12 @@ class IntroSkipper {
 
     showNotification(type) {
         const messages = {
-            'Intro': '⏩ Intro übersprungen',
-            'Recap': '⏩ Zusammenfassung übersprungen'
+            'Intro': '⏩ Intro skipped',
+            'Recap': '⏩ Recap skipped'
         };
 
         const notification = document.createElement('div');
-        notification.textContent = messages[type] || '⏩ Übersprungen';
+        notification.textContent = messages[type] || '⏩ Skipped';
         notification.style.cssText = `
       position: fixed;
       top: 20px;
