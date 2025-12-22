@@ -7,459 +7,559 @@ let silenceAnalyser = null;
 let introSkipper = null;
 
 const SKIP_BUTTON_SELECTORS = {
-    // Netflix
-    netflix: [
-        '[data-uia="player-skip-intro"]',
-        '[data-uia="player-skip-recap"]',
-        '[data-uia="player-skip-credits"]',
-        '.watch-video--skip-content-button',
-        'button[data-uia*="skip"]'
-    ],
+  // Netflix
+  netflix: [
+    '[data-uia="player-skip-intro"]',
+    '[data-uia="player-skip-recap"]',
+    '[data-uia="player-skip-credits"]',
+    ".watch-video--skip-content-button",
+    'button[data-uia*="skip"]',
+  ],
 
-    // Disney+
-    disney: [
-        '[data-testid="skip-intro-button"]',
-        '[data-testid="skip-credits-button"]',
-        '[data-testid="skip-recap-button"]',
-        '.skip-intro',
-        'button[class*="SkipIntro"]',
-        'button[class*="SkipRecap"]'
-    ],
+  // Disney+
+  disney: [
+    // Data-testid selectors
+    '[data-testid="skip-intro-button"]',
+    '[data-testid="skip-credits-button"]',
+    '[data-testid="skip-recap-button"]',
+    '[data-testid="SkipIntroButton"]',
+    '[data-testid="SkipRecapButton"]',
+    '[data-testid="SkipCreditsButton"]',
+    // Class-based selectors
+    ".skip-intro",
+    ".skip-recap",
+    ".skip-credits",
+    'button[class*="SkipIntro"]',
+    'button[class*="SkipRecap"]',
+    'button[class*="skip-intro"]',
+    'button[class*="skip-recap"]',
+    '[class*="SkipButton"]',
+    '[class*="skipButton"]',
+    // Aria labels (English)
+    '[aria-label*="Skip Intro"]',
+    '[aria-label*="Skip Recap"]',
+    '[aria-label*="Skip Credits"]',
+    '[aria-label*="skip intro"]',
+    '[aria-label*="skip recap"]',
+    // Aria labels (German)
+    '[aria-label*="Intro überspringen"]',
+    '[aria-label*="Vorspann überspringen"]',
+    '[aria-label*="Rückblick überspringen"]',
+    '[aria-label*="Zusammenfassung überspringen"]',
+    '[aria-label*="Abspann überspringen"]',
+    '[aria-label*="überspringen"]',
+    // Text-based search (will use findButtonByText)
+    'button:has-text("Skip Intro")',
+    'button:has-text("Skip Recap")',
+    'button:has-text("Skip")',
+    'button:has-text("Intro überspringen")',
+    'button:has-text("Vorspann überspringen")',
+    'button:has-text("Rückblick überspringen")',
+    'button:has-text("Zusammenfassung überspringen")',
+    'button:has-text("Abspann überspringen")',
+    'button:has-text("Überspringen")',
+  ],
 
-    // Amazon Prime Video
-    amazon: [
-        '.atvwebplayersdk-skipelement-button',
-        '[aria-label*="Skip Intro"]',
-        '[aria-label*="Skip Recap"]',
-        '[aria-label*="Skip Credits"]',
-        'button[class*="skip"]'
-    ],
+  // Amazon Prime Video
+  amazon: [
+    // Primary skip button class
+    ".atvwebplayersdk-skipelement-button",
+    ".skipelement",
+    "[class*='skipelement']",
+    "[class*='skip-element']",
+    // Aria labels (English)
+    '[aria-label*="Skip Intro"]',
+    '[aria-label*="Skip Recap"]',
+    '[aria-label*="Skip Credits"]',
+    '[aria-label*="Skip"]',
+    // Aria labels (German)
+    '[aria-label*="Intro überspringen"]',
+    '[aria-label*="Vorspann überspringen"]',
+    '[aria-label*="Rückblick überspringen"]',
+    '[aria-label*="überspringen"]',
+    // Class-based
+    'button[class*="skip"]',
+    '[class*="skipButton"]',
+    '[class*="SkipButton"]',
+    // Data attributes
+    '[data-testid*="skip"]',
+    // Text-based search
+    'button:has-text("Skip Intro")',
+    'button:has-text("Skip Recap")',
+    'button:has-text("Skip")',
+    'button:has-text("Intro überspringen")',
+    'button:has-text("Überspringen")',
+  ],
 
-    // YouTube (für Ads, aber auch nützlich)
-    youtube: [
-        '.ytp-ad-skip-button',
-        '.ytp-skip-ad-button',
-        'button[aria-label*="Skip"]'
-    ],
+  // YouTube - Skip Intro/Recap not supported (no such feature on YouTube)
+  // Speed control still works on YouTube
 
-    // Crunchyroll (Player runs in iframe from static.crunchyroll.com)
-    crunchyroll: [
-        // Primary skip button container
-        '[data-testid="skipButton"]',
-        '[data-testid="skipButton"] div[tabindex="0"]',
-        // Text identifiers inside skip button
-        '[data-testid="skipIntroText"]',
-        '[data-testid="skipRecapText"]',
-        // Class-based selectors
-        '.erc-skip-button',
-        '.skip-button',
-        '.vjs-overlay-skip-intro',
-        // Aria labels (German)
-        '[aria-label*="Opening überspringen"]',
-        '[aria-label*="Intro überspringen"]',
-        '[aria-label*="Rückblick überspringen"]',
-        '[aria-label*="Abspann überspringen"]',
-        // Legacy/fallback
-        'button[class*="skip-intro"]',
-        'button[class*="skip-recap"]',
-        '[data-t="skip-intro-button"]',
-        '[data-t="skip-recap-button"]'
-    ],
+  // Crunchyroll (Player runs in iframe from static.crunchyroll.com)
+  crunchyroll: [
+    // Primary skip button container
+    '[data-testid="skipButton"]',
+    '[data-testid="skipButton"] div[tabindex="0"]',
+    // Text identifiers inside skip button
+    '[data-testid="skipIntroText"]',
+    '[data-testid="skipRecapText"]',
+    // Class-based selectors
+    ".erc-skip-button",
+    ".skip-button",
+    ".vjs-overlay-skip-intro",
+    // Aria labels (German)
+    '[aria-label*="Opening überspringen"]',
+    '[aria-label*="Intro überspringen"]',
+    '[aria-label*="Rückblick überspringen"]',
+    '[aria-label*="Abspann überspringen"]',
+    // Legacy/fallback
+    'button[class*="skip-intro"]',
+    'button[class*="skip-recap"]',
+    '[data-t="skip-intro-button"]',
+    '[data-t="skip-recap-button"]',
+  ],
 
-    // HBO Max
-    hbo: [
-        '[aria-label="Skip Intro"]',
-        '[aria-label="Skip Recap"]',
-        '[aria-label="Skip Credits"]',
-        'button[class*="SkipButton"]'
-    ],
+  // HBO Max
+  hbo: [
+    '[aria-label="Skip Intro"]',
+    '[aria-label="Skip Recap"]',
+    '[aria-label="Skip Credits"]',
+    'button[class*="SkipButton"]',
+  ],
 
-    // Apple TV+
-    appletv: [
-        'button[aria-label*="Skip Intro"]',
-        'button[aria-label*="Skip Recap"]',
-        '.skip-intro-button',
-        '.skip-recap-button'
-    ],
+  // Apple TV+
+  appletv: [
+    'button[aria-label*="Skip Intro"]',
+    'button[aria-label*="Skip Recap"]',
+    ".skip-intro-button",
+    ".skip-recap-button",
+  ],
 
-    // Paramount+
-    paramount: [
-        '[aria-label*="Skip Intro"]',
-        '[aria-label*="Skip Recap"]',
-        'button[class*="skip"]'
-    ],
+  // Paramount+
+  paramount: [
+    '[aria-label*="Skip Intro"]',
+    '[aria-label*="Skip Recap"]',
+    'button[class*="skip"]',
+  ],
 
-    // Peacock
-    peacock: [
-        '[aria-label*="Skip Intro"]',
-        '[aria-label*="Skip Recap"]',
-        'button[data-test*="skip"]'
-    ],
+  // Peacock
+  peacock: [
+    '[aria-label*="Skip Intro"]',
+    '[aria-label*="Skip Recap"]',
+    'button[data-test*="skip"]',
+  ],
 
-    // Generische Selektoren (funktionieren auf vielen Seiten)
-    generic: [
-        'button[aria-label*="Skip"]',
-        'button[aria-label*="Überspringen"]',
-        '[aria-label*="überspringen"]',
-        'button[class*="skip-intro" i]',
-        'button[class*="skip-recap" i]',
-        'button[class*="skip-credits" i]',
-        'button[id*="skip-intro" i]',
-        'button[id*="skip-recap" i]',
-        // Buttons/Divs mit bestimmtem Text-Content
-        'button:has-text("Skip Intro")',
-        'button:has-text("Skip")',
-        'button:has-text("Skip Recap")',
-        'button:has-text("Skip Credits")',
-        'button:has-text("Intro überspringen")',
-        'button:has-text("Opening überspringen")',
-        'button:has-text("Vorspann überspringen")',
-        'button:has-text("Zusammenfassung überspringen")',
-        'button:has-text("Rückblick überspringen")',
-        'button:has-text("Abspann überspringen")'
-    ]
+  // Generische Selektoren (funktionieren auf vielen Seiten)
+  generic: [
+    'button[aria-label*="Skip"]',
+    'button[aria-label*="Überspringen"]',
+    '[aria-label*="überspringen"]',
+    'button[class*="skip-intro" i]',
+    'button[class*="skip-recap" i]',
+    'button[class*="skip-credits" i]',
+    'button[id*="skip-intro" i]',
+    'button[id*="skip-recap" i]',
+    // Buttons/Divs mit bestimmtem Text-Content
+    'button:has-text("Skip Intro")',
+    'button:has-text("Skip")',
+    'button:has-text("Skip Recap")',
+    'button:has-text("Skip Credits")',
+    'button:has-text("Intro überspringen")',
+    'button:has-text("Opening überspringen")',
+    'button:has-text("Vorspann überspringen")',
+    'button:has-text("Zusammenfassung überspringen")',
+    'button:has-text("Rückblick überspringen")',
+    'button:has-text("Abspann überspringen")',
+  ],
 };
 
-
-
 // List of officially supported streaming platforms for auto-skip
-const SUPPORTED_STREAMING_PLATFORMS = ['netflix', 'disney', 'amazon', 'youtube', 'crunchyroll', 'hbo', 'appletv', 'paramount', 'peacock'];
+// YouTube is excluded as it doesn't have intro/recap skip buttons
+const SUPPORTED_STREAMING_PLATFORMS = [
+  "netflix",
+  "disney",
+  "amazon",
+  "crunchyroll",
+  "hbo",
+  "appletv",
+  "paramount",
+  "peacock",
+];
 
 function getPlatform(hostname) {
-    if (hostname.includes('netflix.com')) return 'netflix';
-    if (hostname.includes('disneyplus.com') || hostname.includes('disney+')) return 'disney';
-    if (hostname.includes('amazon.com') || hostname.includes('primevideo.com')) return 'amazon';
-    if (hostname.includes('youtube.com')) return 'youtube';
-    if (hostname.includes('crunchyroll.com') || hostname.includes('static.crunchyroll.com')) return 'crunchyroll';
-    if (hostname.includes('hbo.com') || hostname.includes('hbomax.com')) return 'hbo';
-    if (hostname.includes('tv.apple.com')) return 'appletv';
-    if (hostname.includes('paramountplus.com')) return 'paramount';
-    if (hostname.includes('peacocktv.com')) return 'peacock';
-    return 'generic';
+  if (hostname.includes("netflix.com")) return "netflix";
+  if (hostname.includes("disneyplus.com") || hostname.includes("disney+"))
+    return "disney";
+  // Support all Amazon regional domains (amazon.de, amazon.co.uk, etc.)
+  if (hostname.includes("amazon.") || hostname.includes("primevideo."))
+    return "amazon";
+  if (hostname.includes("youtube.com")) return "youtube";
+  if (
+    hostname.includes("crunchyroll.com") ||
+    hostname.includes("static.crunchyroll.com")
+  )
+    return "crunchyroll";
+  if (hostname.includes("hbo.com") || hostname.includes("hbomax.com"))
+    return "hbo";
+  if (hostname.includes("tv.apple.com")) return "appletv";
+  if (hostname.includes("paramountplus.com")) return "paramount";
+  if (hostname.includes("peacocktv.com")) return "peacock";
+  return "generic";
 }
 
 // Check if current site is a supported streaming platform
 function isSupportedStreamingPlatform() {
-    const platform = getPlatform(window.location.hostname);
-    return SUPPORTED_STREAMING_PLATFORMS.includes(platform);
+  const platform = getPlatform(window.location.hostname);
+  return SUPPORTED_STREAMING_PLATFORMS.includes(platform);
 }
 
 // Initialize
 chrome.storage.sync.get(null, async (items) => {
-    settings = items;
-    
-    // Initialize license checking
-    await License.checkFromStorage();
-    
-    // Check if site is enabled
-    const host = window.location.hostname;
-    const platform = getPlatform(host);
+  settings = items;
 
-    // Default to true if not present
-    if (settings.siteSettings && settings.siteSettings[platform] === false) {
-        console.log('[SkipIt] Disabled on this site');
-        return;
-    }
+  // Initialize license checking
+  await License.checkFromStorage();
 
-    // Check platform access (Free: Netflix/YouTube only)
-    if (!License.canUsePlatform(platform)) {
-        console.log('[SkipIt] Platform requires Premium:', platform);
-        showUpgradePrompt(platform);
-        return;
-    }
+  // Check if site is enabled
+  const host = window.location.hostname;
+  const platform = getPlatform(host);
 
-    initialize();
-    if (introSkipper) introSkipper.init();
+  // Default to true if not present
+  if (settings.siteSettings && settings.siteSettings[platform] === false) {
+    console.log("[SkipIt] Disabled on this site");
+    return;
+  }
+
+  // Check platform access (Free: Netflix/YouTube only)
+  if (!License.canUsePlatform(platform)) {
+    console.log("[SkipIt] Platform requires Premium:", platform);
+    showUpgradePrompt(platform);
+    return;
+  }
+
+  initialize();
+  if (introSkipper) introSkipper.init();
 });
 
 chrome.storage.onChanged.addListener((changes) => {
-    for (let key in changes) {
-        settings[key] = changes[key].newValue;
-    }
-    if (changes.autoSkip && introSkipper) {
-        introSkipper.init(); // Re-init to pick up changes
-    }
+  for (let key in changes) {
+    settings[key] = changes[key].newValue;
+  }
+  if (changes.autoSkip && introSkipper) {
+    introSkipper.init(); // Re-init to pick up changes
+  }
 });
 
 function initialize() {
-    // Initial scan
-    document.querySelectorAll('video').forEach(attachController);
+  // Initial scan
+  document.querySelectorAll("video").forEach(attachController);
 
-    // Auto Skipper
-    introSkipper = new IntroSkipper();
-    introSkipper.init();
+  // Auto Skipper
+  introSkipper = new IntroSkipper();
+  introSkipper.init();
 
-    // Observer for new videos
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach((mutation) => {
-            mutation.addedNodes.forEach((node) => {
-                if (node.nodeName === 'VIDEO') {
-                    attachController(node);
-                } else if (node.querySelectorAll) {
-                    node.querySelectorAll('video').forEach(attachController);
-                }
-            });
-        });
+  // Observer for new videos
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      mutation.addedNodes.forEach((node) => {
+        if (node.nodeName === "VIDEO") {
+          attachController(node);
+        } else if (node.querySelectorAll) {
+          node.querySelectorAll("video").forEach(attachController);
+        }
+      });
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
 
-    // Keyboard listener
-    document.addEventListener('keydown', handleKeydown, true);
+  // Keyboard listener
+  document.addEventListener("keydown", handleKeydown, true);
 
-    // Check per-site settings
-    const host = window.location.hostname;
-    if (settings.perSiteSettings && settings.perSiteSettings[host] && settings.perSiteSettings[host].speed) {
-        // We might want to apply this default speed to all videos on load
-    }
+  // Check per-site settings
+  const host = window.location.hostname;
+  if (
+    settings.perSiteSettings &&
+    settings.perSiteSettings[host] &&
+    settings.perSiteSettings[host].speed
+  ) {
+    // We might want to apply this default speed to all videos on load
+  }
 }
 
 function attachController(video) {
-    if (videos.has(video)) return;
-    videos.add(video);
+  if (videos.has(video)) return;
+  videos.add(video);
 
-    const host = window.location.hostname;
-    let startSpeed = settings.defaultSpeed || 1.0;
+  const host = window.location.hostname;
+  let startSpeed = settings.defaultSpeed || 1.0;
 
-    if (settings.perSiteSettings && settings.perSiteSettings[host] && settings.perSiteSettings[host].speed) {
-        startSpeed = settings.perSiteSettings[host].speed;
-    }
+  if (
+    settings.perSiteSettings &&
+    settings.perSiteSettings[host] &&
+    settings.perSiteSettings[host].speed
+  ) {
+    startSpeed = settings.perSiteSettings[host].speed;
+  }
 
-    // Apply speed if not 1.0
-    if (startSpeed !== 1.0) {
-        video.playbackRate = startSpeed;
-    }
+  // Apply speed if not 1.0
+  if (startSpeed !== 1.0) {
+    video.playbackRate = startSpeed;
+  }
 
-    // Auto-skip listeners
-    video.addEventListener('timeupdate', () => handleAutoSkip(video));
+  // Auto-skip listeners
+  video.addEventListener("timeupdate", () => handleAutoSkip(video));
 
-    // Rate change listener (force our speed if site tries to change it? - Optional, maybe too aggressive. 
-    // Better: Update OSD if it changes)
-    video.addEventListener('ratechange', () => {
-        // Optional: show OSD on external change?
-    });
+  // Rate change listener (force our speed if site tries to change it? - Optional, maybe too aggressive.
+  // Better: Update OSD if it changes)
+  video.addEventListener("ratechange", () => {
+    // Optional: show OSD on external change?
+  });
 }
 
 function handleAutoSkip(video) {
-    if (!settings.autoSkip) return;
+  if (!settings.autoSkip) return;
 
-    const { introEnabled, introSeconds, introFallbackSeconds, introButtonClick, outroEnabled, outroSeconds } = settings.autoSkip;
+  const {
+    introEnabled,
+    introSeconds,
+    introFallbackSeconds,
+    introButtonClick,
+    outroEnabled,
+    outroSeconds,
+  } = settings.autoSkip;
 
-    // Intro
-    const introTime = introFallbackSeconds || introSeconds || 10;
-    // Only use time skip if button click is disabled or we want both? Assumption: Time skip is fallback or alternative mode.
-    // If introButtonClick is true, we assume IntroSkipper class handles it.
-    // But if we strictly follow "Fallback if button not found", that's hard to sync.
-    // Based on options UI (radio button), they are exclusive.
-    if (introEnabled && !introButtonClick && video.currentTime < introTime && video.currentTime > 0) {
-        if (video.currentTime < 0.5) {
-            video.currentTime = introTime;
-        }
+  // Intro
+  const introTime = introFallbackSeconds || introSeconds || 10;
+  // Only use time skip if button click is disabled or we want both? Assumption: Time skip is fallback or alternative mode.
+  // If introButtonClick is true, we assume IntroSkipper class handles it.
+  // But if we strictly follow "Fallback if button not found", that's hard to sync.
+  // Based on options UI (radio button), they are exclusive.
+  if (
+    introEnabled &&
+    !introButtonClick &&
+    video.currentTime < introTime &&
+    video.currentTime > 0
+  ) {
+    if (video.currentTime < 0.5) {
+      video.currentTime = introTime;
     }
+  }
 
-    // Outro
-    if (outroEnabled && video.duration && (video.duration - video.currentTime) < outroSeconds && (video.duration - video.currentTime) > 0.5) {
-        if (!video.paused) {
-            video.currentTime = video.duration; // Skip to end
-        }
+  // Outro
+  if (
+    outroEnabled &&
+    video.duration &&
+    video.duration - video.currentTime < outroSeconds &&
+    video.duration - video.currentTime > 0.5
+  ) {
+    if (!video.paused) {
+      video.currentTime = video.duration; // Skip to end
     }
+  }
 
-    // Silence detection (Advanced, maybe skip for MVP or implement simple volume check)
+  // Silence detection (Advanced, maybe skip for MVP or implement simple volume check)
 }
 
 function handleKeydown(e) {
-    // Ignore if typing in input
-    const target = e.target;
-    if (target.matches('input, textarea, [contenteditable]')) return;
+  // Ignore if typing in input
+  const target = e.target;
+  if (target.matches("input, textarea, [contenteditable]")) return;
 
-    // Ignore if modifier keys are pressed (except Shift for + access on some layouts)
-    if (e.ctrlKey || e.altKey || e.metaKey) return;
+  // Ignore if modifier keys are pressed (except Shift for + access on some layouts)
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
 
-    const key = e.key;
+  const key = e.key;
 
-    // Debug Log
-    if (settings.autoSkip?.debugMode) console.log(`[SkipIt] Key pressed: ${key} (Code: ${e.code})`);
+  // Debug Log
+  if (settings.autoSkip?.debugMode)
+    console.log(`[SkipIt] Key pressed: ${key} (Code: ${e.code})`);
 
-    // Explicitly handle + and - keys as requested
-    // Logic: + (Shift+= on US, + on DE, NumpadAdd) -> Faster
-    // Logic: - (- on US, - on DE, NumpadSubtract) -> Slower
+  // Explicitly handle + and - keys as requested
+  // Logic: + (Shift+= on US, + on DE, NumpadAdd) -> Faster
+  // Logic: - (- on US, - on DE, NumpadSubtract) -> Slower
 
-    let action = null;
+  let action = null;
 
-    // Check for presets (1-4)
-    if (key === '1') action = 'preset1';
-    else if (key === '2') action = 'preset2';
-    else if (key === '3') action = 'preset3';
-    else if (key === '4') action = 'preset4';
+  // Check for presets (1-4)
+  if (key === "1") action = "preset1";
+  else if (key === "2") action = "preset2";
+  else if (key === "3") action = "preset3";
+  else if (key === "4") action = "preset4";
+  // Check for speed control
+  else if (
+    key === "+" ||
+    key === "NumpadAdd" ||
+    key === "Add" ||
+    (key === "=" && e.shiftKey)
+  ) {
+    action = "faster";
+  } else if (key === "-" || key === "NumpadSubtract" || key === "Subtract") {
+    action = "slower";
+  }
 
-    // Check for speed control
-    else if (key === '+' || key === 'NumpadAdd' || key === 'Add' || (key === '=' && e.shiftKey)) {
-        action = 'faster';
-    } else if (key === '-' || key === 'NumpadSubtract' || key === 'Subtract') {
-        action = 'slower';
+  if (!action) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  // Check local video first
+  const video = getTargetVideo();
+
+  if (video) {
+    if (action === "faster") {
+      changeSpeed(video, 0.25);
+    } else if (action === "slower") {
+      changeSpeed(video, -0.25);
+    } else if (action.startsWith("preset")) {
+      const index = parseInt(action.replace("preset", "")) - 1;
+      if (settings.presets && settings.presets[index]) {
+        setSpeed(video, settings.presets[index]);
+      }
     }
-
-    if (!action) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    // Check local video first
-    const video = getTargetVideo();
-
-    if (video) {
-        if (action === 'faster') {
-            changeSpeed(video, 0.25);
-        } else if (action === 'slower') {
-            changeSpeed(video, -0.25);
-        } else if (action.startsWith('preset')) {
-            const index = parseInt(action.replace('preset', '')) - 1;
-            if (settings.presets && settings.presets[index]) {
-                setSpeed(video, settings.presets[index]);
-            }
-        }
-    } else {
-        // No video found in this frame (e.g. we are Top Frame, video is in Iframe)
-        // Send to background to relay to other frames in this tab
-        chrome.runtime.sendMessage({
-            action: "keyPress",
-            key: key,
-            code: e.code,
-            shiftKey: e.shiftKey
-        });
-    }
+  } else {
+    // No video found in this frame (e.g. we are Top Frame, video is in Iframe)
+    // Send to background to relay to other frames in this tab
+    chrome.runtime.sendMessage({
+      action: "keyPress",
+      key: key,
+      code: e.code,
+      shiftKey: e.shiftKey,
+    });
+  }
 }
 
 function getTargetVideo() {
-    // Strategy:
-    // 1. Check for specific main video players on known sites (Netflix, YouTube, etc)
-    // 2. Filter valid videos (dimension check)
-    // 3. Prefer playing videos
-    // 4. Fallback to largest video
+  // Strategy:
+  // 1. Check for specific main video players on known sites (Netflix, YouTube, etc)
+  // 2. Filter valid videos (dimension check)
+  // 3. Prefer playing videos
+  // 4. Fallback to largest video
 
-    // Some sites use shadowDOM, but we are in main context. 
-    // Basic selector usually works.
+  // Some sites use shadowDOM, but we are in main context.
+  // Basic selector usually works.
 
-    const allVideos = Array.from(document.querySelectorAll('video'))
-        .filter(v => v.offsetWidth > 0 && v.offsetHeight > 0); // Must be visible-ish
+  const allVideos = Array.from(document.querySelectorAll("video")).filter(
+    (v) => v.offsetWidth > 0 && v.offsetHeight > 0
+  ); // Must be visible-ish
 
-    if (allVideos.length === 0) return null;
+  if (allVideos.length === 0) return null;
 
-    // Preference 1: Playing video
-    const playing = allVideos.filter(v => !v.paused && v.readyState > 0);
-    if (playing.length > 0) return playing[0];
+  // Preference 1: Playing video
+  const playing = allVideos.filter((v) => !v.paused && v.readyState > 0);
+  if (playing.length > 0) return playing[0];
 
-    // Preference 2: Largest video by area
-    let largest = allVideos[0];
-    let maxArea = largest.offsetWidth * largest.offsetHeight;
+  // Preference 2: Largest video by area
+  let largest = allVideos[0];
+  let maxArea = largest.offsetWidth * largest.offsetHeight;
 
-    for (let i = 1; i < allVideos.length; i++) {
-        const v = allVideos[i];
-        const area = v.offsetWidth * v.offsetHeight;
-        if (area > maxArea) {
-            largest = v;
-            maxArea = area;
-        }
+  for (let i = 1; i < allVideos.length; i++) {
+    const v = allVideos[i];
+    const area = v.offsetWidth * v.offsetHeight;
+    if (area > maxArea) {
+      largest = v;
+      maxArea = area;
     }
+  }
 
-    return largest;
+  return largest;
 }
 
 function changeSpeed(video, delta) {
-    let newSpeed = video.playbackRate + delta;
-    setSpeed(video, newSpeed);
+  let newSpeed = video.playbackRate + delta;
+  setSpeed(video, newSpeed);
 }
 
 function setSpeed(video, speed) {
-    // Apply license-based speed limits
-    // Premium: 0.25 - 4.0, Free: 1.0 - 2.0
-    speed = License.clampSpeed(speed);
+  // Apply license-based speed limits
+  // Premium: 0.25 - 4.0, Free: 1.0 - 2.0
+  speed = License.clampSpeed(speed);
 
-    // Round to 2 decimals to avoid floating point weirdness
-    speed = Math.round(speed * 100) / 100;
+  // Round to 2 decimals to avoid floating point weirdness
+  speed = Math.round(speed * 100) / 100;
 
-    video.playbackRate = speed;
-    showOsd(speed);
-    savePerSiteSpeed(speed);
+  video.playbackRate = speed;
+  showOsd(speed);
+  savePerSiteSpeed(speed);
 
-    // Notify popup (if open)
-    try {
-        chrome.runtime.sendMessage({ action: "speedUpdate", speed: speed });
-    } catch (e) {
-        // Ignored, happens if no listener (popup closed)
-    }
+  // Notify popup (if open)
+  try {
+    chrome.runtime.sendMessage({ action: "speedUpdate", speed: speed });
+  } catch (e) {
+    // Ignored, happens if no listener (popup closed)
+  }
 }
 
 function savePerSiteSpeed(speed) {
-    const host = window.location.hostname;
-    if (!settings.perSiteSettings) settings.perSiteSettings = {};
-    if (!settings.perSiteSettings[host]) settings.perSiteSettings[host] = {};
+  const host = window.location.hostname;
+  if (!settings.perSiteSettings) settings.perSiteSettings = {};
+  if (!settings.perSiteSettings[host]) settings.perSiteSettings[host] = {};
 
-    settings.perSiteSettings[host].speed = speed;
+  settings.perSiteSettings[host].speed = speed;
 
-    // Debounce save?
-    chrome.storage.sync.set({ perSiteSettings: settings.perSiteSettings });
+  // Debounce save?
+  chrome.storage.sync.set({ perSiteSettings: settings.perSiteSettings });
 }
 
 function showOsd(speed) {
-    if (!settings.osd || !settings.osd.enabled) return;
+  if (!settings.osd || !settings.osd.enabled) return;
 
-    if (!osdElement) {
-        osdElement = document.createElement('div');
-        osdElement.className = 'vsc-osd';
-        document.body.appendChild(osdElement);
-    }
+  if (!osdElement) {
+    osdElement = document.createElement("div");
+    osdElement.className = "vsc-osd";
+    document.body.appendChild(osdElement);
+  }
 
-    osdElement.textContent = speed.toFixed(2) + 'x';
-    osdElement.classList.remove('vsc-osd-hidden');
+  osdElement.textContent = speed.toFixed(2) + "x";
+  osdElement.classList.remove("vsc-osd-hidden");
 
-    // Positioning
-    if (settings.osd.position === 'top-right') {
-        osdElement.style.top = '20px';
-        osdElement.style.right = '20px';
-        osdElement.style.left = 'auto';
-        osdElement.style.bottom = 'auto';
-    } else if (settings.osd.position === 'top-left') {
-        osdElement.style.top = '20px';
-        osdElement.style.left = '20px';
-        osdElement.style.right = 'auto';
-        osdElement.style.bottom = 'auto';
-    } // ... other positions
+  // Positioning
+  if (settings.osd.position === "top-right") {
+    osdElement.style.top = "20px";
+    osdElement.style.right = "20px";
+    osdElement.style.left = "auto";
+    osdElement.style.bottom = "auto";
+  } else if (settings.osd.position === "top-left") {
+    osdElement.style.top = "20px";
+    osdElement.style.left = "20px";
+    osdElement.style.right = "auto";
+    osdElement.style.bottom = "auto";
+  } // ... other positions
 
-    if (osdTimeout) clearTimeout(osdTimeout);
-    osdTimeout = setTimeout(() => {
-        osdElement.classList.add('vsc-osd-hidden');
-    }, settings.osd.duration || 2000);
+  if (osdTimeout) clearTimeout(osdTimeout);
+  osdTimeout = setTimeout(() => {
+    osdElement.classList.add("vsc-osd-hidden");
+  }, settings.osd.duration || 2000);
 }
 
 function toggleOsd() {
-    // Only toggles the setting preference temporarily in memory or globally? 
-    // Usually toggles "Show OSD" preference.
-    if (!settings.osd) settings.osd = {};
-    settings.osd.enabled = !settings.osd.enabled;
-    chrome.storage.sync.set({ osd: settings.osd });
+  // Only toggles the setting preference temporarily in memory or globally?
+  // Usually toggles "Show OSD" preference.
+  if (!settings.osd) settings.osd = {};
+  settings.osd.enabled = !settings.osd.enabled;
+  chrome.storage.sync.set({ osd: settings.osd });
 
-    // Feedback
-    if (settings.osd.enabled) showOsd(getTargetVideo() ? getTargetVideo().playbackRate : 1.0);
+  // Feedback
+  if (settings.osd.enabled)
+    showOsd(getTargetVideo() ? getTargetVideo().playbackRate : 1.0);
 }
 
 // Show upgrade prompt for non-premium users on premium platforms
 function showUpgradePrompt(platform) {
-    const platformNames = {
-        'disney': 'Disney+',
-        'amazon': 'Amazon Prime Video',
-        'crunchyroll': 'Crunchyroll',
-        'hbo': 'HBO Max',
-        'appletv': 'Apple TV+',
-        'paramount': 'Paramount+',
-        'peacock': 'Peacock'
-    };
-    
-    const platformName = platformNames[platform] || platform;
-    
-    // Create upgrade prompt overlay
-    const overlay = document.createElement('div');
-    overlay.id = 'skipit-upgrade-prompt';
-    overlay.innerHTML = `
+  const platformNames = {
+    disney: "Disney+",
+    amazon: "Amazon Prime Video",
+    crunchyroll: "Crunchyroll",
+    hbo: "HBO Max",
+    appletv: "Apple TV+",
+    paramount: "Paramount+",
+    peacock: "Peacock",
+  };
+
+  const platformName = platformNames[platform] || platform;
+
+  // Create upgrade prompt overlay
+  const overlay = document.createElement("div");
+  overlay.id = "skipit-upgrade-prompt";
+  overlay.innerHTML = `
         <div style="
             position: fixed;
             bottom: 20px;
@@ -502,12 +602,12 @@ function showUpgradePrompt(platform) {
             ">Maybe Later</button>
         </div>
     `;
-    
-    // Add animation styles
-    if (!document.getElementById('skipit-upgrade-styles')) {
-        const style = document.createElement('style');
-        style.id = 'skipit-upgrade-styles';
-        style.textContent = `
+
+  // Add animation styles
+  if (!document.getElementById("skipit-upgrade-styles")) {
+    const style = document.createElement("style");
+    style.id = "skipit-upgrade-styles";
+    style.textContent = `
             @keyframes skipitSlideIn {
                 from { transform: translateX(100px); opacity: 0; }
                 to { transform: translateX(0); opacity: 1; }
@@ -517,365 +617,865 @@ function showUpgradePrompt(platform) {
                 to { transform: translateX(100px); opacity: 0; }
             }
         `;
-        document.head.appendChild(style);
+    document.head.appendChild(style);
+  }
+
+  document.body.appendChild(overlay);
+
+  // Button handlers
+  document
+    .getElementById("skipit-upgrade-btn")
+    ?.addEventListener("click", () => {
+      chrome.runtime.sendMessage({ action: "openUpgradePage" });
+      overlay.remove();
+    });
+
+  document
+    .getElementById("skipit-dismiss-btn")
+    ?.addEventListener("click", () => {
+      overlay.querySelector("div").style.animation = "skipitSlideOut 0.3s ease";
+      setTimeout(() => overlay.remove(), 280);
+    });
+
+  // Auto-dismiss after 10 seconds
+  setTimeout(() => {
+    if (document.getElementById("skipit-upgrade-prompt")) {
+      overlay.querySelector("div").style.animation = "skipitSlideOut 0.3s ease";
+      setTimeout(() => overlay.remove(), 280);
     }
-    
-    document.body.appendChild(overlay);
-    
-    // Button handlers
-    document.getElementById('skipit-upgrade-btn')?.addEventListener('click', () => {
-        chrome.runtime.sendMessage({ action: 'openUpgradePage' });
-        overlay.remove();
-    });
-    
-    document.getElementById('skipit-dismiss-btn')?.addEventListener('click', () => {
-        overlay.querySelector('div').style.animation = 'skipitSlideOut 0.3s ease';
-        setTimeout(() => overlay.remove(), 280);
-    });
-    
-    // Auto-dismiss after 10 seconds
-    setTimeout(() => {
-        if (document.getElementById('skipit-upgrade-prompt')) {
-            overlay.querySelector('div').style.animation = 'skipitSlideOut 0.3s ease';
-            setTimeout(() => overlay.remove(), 280);
-        }
-    }, 10000);
+  }, 10000);
 }
 
 // Listen for messages from Popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    // If settings aren't loaded or site is disabled, don't execute actions
-    if (!settings.siteSettings) {
-        // If settings are empty, we might not have loaded them yet or it's a fresh install.
-        // But usually content script runs get() on load.
-        // We can check if site is disabled if we have settings.
-        // If we don't have settings yet, we probably shouldn't act, or should default to enabled.
-        // However, correct behavior for "disabled site" is to not act.
+  // If settings aren't loaded or site is disabled, don't execute actions
+  if (!settings.siteSettings) {
+    // If settings are empty, we might not have loaded them yet or it's a fresh install.
+    // But usually content script runs get() on load.
+    // We can check if site is disabled if we have settings.
+    // If we don't have settings yet, we probably shouldn't act, or should default to enabled.
+    // However, correct behavior for "disabled site" is to not act.
+  }
+
+  const host = window.location.hostname;
+  const platform = getPlatform(host);
+
+  try {
+    if (
+      settings &&
+      settings.siteSettings &&
+      settings.siteSettings[platform] === false
+    ) {
+      // Site is explicitly disabled - Ignore commands
+      if (request.action === "getSpeed") {
+        sendResponse({ speed: 1.0, disabled: true });
+        return;
+      }
+      if (request.action === "setSpeed") {
+        return; // Do nothing
+      }
     }
+  } catch (e) {
+    // Fallback to enabled if check fails
+    console.error(
+      "[Video Speed Controller+] Error checking disabled status:",
+      e
+    );
+  }
 
-    const host = window.location.hostname;
-    const platform = getPlatform(host);
-
-    try {
-        if (settings && settings.siteSettings && settings.siteSettings[platform] === false) {
-            // Site is explicitly disabled - Ignore commands
-            if (request.action === "getSpeed") {
-                sendResponse({ speed: 1.0, disabled: true });
-                return;
-            }
-            if (request.action === "setSpeed") {
-                return; // Do nothing
-            }
-        }
-    } catch (e) {
-        // Fallback to enabled if check fails
-        console.error("[Video Speed Controller+] Error checking disabled status:", e);
+  if (request.action === "getSpeed") {
+    const v = getTargetVideo();
+    // Only respond if we found a video, otherwise let other frames answer
+    if (v) {
+      sendResponse({ speed: v.playbackRate });
     }
-
-    if (request.action === "getSpeed") {
-        const v = getTargetVideo();
-        // Only respond if we found a video, otherwise let other frames answer
-        if (v) {
-            sendResponse({ speed: v.playbackRate });
-        }
-    } else if (request.action === "setSpeed") {
-        console.log('[VSC+] Received setSpeed:', request.speed);
-        const v = getTargetVideo();
-        console.log('[VSC+] Target video:', v ? 'found' : 'NOT FOUND');
-        if (v) {
-            setSpeed(v, request.speed);
-            console.log('[VSC+] Speed set to:', request.speed);
-        }
-    } else if (request.action === "simulateKey") {
-        const video = getTargetVideo();
-        if (video) {
-            // Re-use logic or call simplified handler
-            // Just map keys to actions directly
-            const key = request.key;
-            let action = null;
-            if (key === '+' || key === 'NumpadAdd' || key === 'Add' || (key === '=' && request.shiftKey)) action = 'faster';
-            else if (key === '-' || key === 'NumpadSubtract' || key === 'Subtract') action = 'slower';
-            // presets... 
-            else if (key === '1') action = 'preset1';
-            else if (key === '2') action = 'preset2';
-            else if (key === '3') action = 'preset3';
-            else if (key === '4') action = 'preset4';
-
-            if (action) {
-                if (action === 'faster') changeSpeed(video, 0.25);
-                else if (action === 'slower') changeSpeed(video, -0.25);
-                else if (action.startsWith('preset')) {
-                    const index = parseInt(action.replace('preset', '')) - 1;
-                    if (settings.presets && settings.presets[index]) {
-                        setSpeed(video, settings.presets[index]);
-                    }
-                }
-            }
-        }
+  } else if (request.action === "setSpeed") {
+    console.log("[VSC+] Received setSpeed:", request.speed);
+    const v = getTargetVideo();
+    console.log("[VSC+] Target video:", v ? "found" : "NOT FOUND");
+    if (v) {
+      setSpeed(v, request.speed);
+      console.log("[VSC+] Speed set to:", request.speed);
     }
+  } else if (request.action === "simulateKey") {
+    const video = getTargetVideo();
+    if (video) {
+      // Re-use logic or call simplified handler
+      // Just map keys to actions directly
+      const key = request.key;
+      let action = null;
+      if (
+        key === "+" ||
+        key === "NumpadAdd" ||
+        key === "Add" ||
+        (key === "=" && request.shiftKey)
+      )
+        action = "faster";
+      else if (key === "-" || key === "NumpadSubtract" || key === "Subtract")
+        action = "slower";
+      // presets...
+      else if (key === "1") action = "preset1";
+      else if (key === "2") action = "preset2";
+      else if (key === "3") action = "preset3";
+      else if (key === "4") action = "preset4";
+
+      if (action) {
+        if (action === "faster") changeSpeed(video, 0.25);
+        else if (action === "slower") changeSpeed(video, -0.25);
+        else if (action.startsWith("preset")) {
+          const index = parseInt(action.replace("preset", "")) - 1;
+          if (settings.presets && settings.presets[index]) {
+            setSpeed(video, settings.presets[index]);
+          }
+        }
+      }
+    }
+  }
 });
 
 class IntroSkipper {
-    constructor() {
-        this.lastClickTime = 0;
-        this.clickDebounceMs = 5000; // 5 Sekunden zwischen Clicks
-        this.checkInterval = 1000; // Jede Sekunde checken
-        this.observer = null;
-        this.intervalId = null;
-        this.enabled = false;
-        this.skipRecapEnabled = false;
-        this.autoPlayNextEnabled = false;
-        this.clickedButtons = new Set(); // Verhindert doppeltes Klicken
+  constructor() {
+    this.lastClickTime = 0;
+    this.clickDebounceMs = 5000; // 5 Sekunden zwischen Clicks
+    this.checkInterval = 1000; // Jede Sekunde checken
+    this.observer = null;
+    this.intervalId = null;
+    this.enabled = false;
+    this.skipRecapEnabled = false;
+    this.autoPlayNextEnabled = false;
+    this.clickedButtons = new Set(); // Verhindert doppeltes Klicken
+  }
+
+  // Check if we're on a video playback page (not browse/home page)
+  isVideoPlaybackPage() {
+    const videos = document.querySelectorAll("video");
+    const url = window.location.href.toLowerCase();
+    const platform = getPlatform(window.location.hostname);
+
+    // Debug info
+    if (settings.autoSkip?.debugMode) {
+      console.log("[SkipIt] Checking playback page:", {
+        url: url,
+        platform: platform,
+        videoCount: videos.length,
+      });
     }
 
-    async init() {
-        // We can access global 'settings' directly as it's kept in sync
-        this.enabled = (settings.autoSkip && settings.autoSkip.introEnabled) || false;
-        this.skipRecapEnabled = (settings.autoSkip && settings.autoSkip.recapEnabled) || false;
+    // Check for video elements
+    for (const video of videos) {
+      const rect = video.getBoundingClientRect();
 
-        // Stop if previously running
-        this.stop();
-
-        // If neither is enabled, do nothing
-        if (!this.enabled && !this.skipRecapEnabled) return;
-
-        // Only run auto-skip on supported streaming platforms
-        if (!isSupportedStreamingPlatform()) {
-            if (settings.autoSkip?.debugMode) {
-                console.log('[SkipIt] Auto-Skip disabled: Not a supported streaming platform');
-            }
-            return;
-        }
-
-        // Check license: Free users can only use Auto-Skip on Netflix/YouTube
-        const platform = getPlatform(window.location.hostname);
-        if (!License.canUseAutoSkip(platform)) {
-            if (settings.autoSkip?.debugMode) {
-                console.log('[SkipIt] Auto-Skip on this platform requires Premium:', platform);
-            }
-            return;
-        }
-
-        this.startWatching();
-    }
-
-    startWatching() {
-        // Polling: Alle X Millisekunden nach Button suchen
-        this.intervalId = setInterval(() => {
-            if (this.enabled || this.skipRecapEnabled) {
-                this.checkForSkipButton();
-            }
-        }, settings.autoSkip?.buttonCheckInterval || this.checkInterval);
-
-        // MutationObserver: Auf neue Buttons reagieren
-        this.observer = new MutationObserver(() => {
-            if (this.enabled || this.skipRecapEnabled) {
-                this.checkForSkipButton();
-            }
+      if (settings.autoSkip?.debugMode && videos.length > 0) {
+        console.log("[SkipIt] Video found:", {
+          width: rect.width,
+          height: rect.height,
+          readyState: video.readyState,
+          paused: video.paused,
+          duration: video.duration,
         });
+      }
 
-        this.observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-
+      // Check if there's a reasonably sized video element
+      // Reduced size requirements to catch more cases
+      if (rect.width > 100 && rect.height > 80) {
         if (settings.autoSkip?.debugMode) {
-            console.log('[SkipIt] Auto-Skipper aktiviert');
-            console.log('- Intro Skip:', this.enabled);
-            console.log('- Recap Skip:', this.skipRecapEnabled);
+          console.log("[SkipIt] Video size OK, returning true");
         }
+        return true;
+      }
     }
 
-    checkForSkipButton() {
-        // Debounce: Nicht zu oft klicken
-        const now = Date.now();
-        if (now - this.lastClickTime < this.clickDebounceMs) {
-            return;
-        }
-
-        const platform = getPlatform(window.location.hostname);
-
-        // Only use platform-specific selectors, no generic selectors
-        // This prevents false positives on non-streaming sites
-        const selectors = SKIP_BUTTON_SELECTORS[platform] || [];
-
-        // If no selectors for this platform, don't try to skip anything
-        if (selectors.length === 0) {
-            return;
-        }
-
-        for (const selector of selectors) {
-            // Versuche Button zu finden
-            let button = null;
-
-            // Standard querySelector
-            if (!selector.includes(':has-text')) {
-                button = document.querySelector(selector);
-            } else {
-                // Text-basierte Suche
-                const searchText = selector.match(/\("(.+)"\)/)?.[1];
-                if (searchText) {
-                    button = this.findButtonByText(searchText);
-                }
-            }
-
-            if (button && this.isButtonVisible(button) && !this.wasClicked(button)) {
-                // Prüfe ob es ein Recap/Credits Button ist und ob das aktiviert ist
-                const buttonText = button.textContent.toLowerCase();
-                const isRecap = buttonText.includes('recap') ||
-                    buttonText.includes('rückblick') ||
-                    buttonText.includes('zusammenfassung') ||
-                    buttonText.includes('credits') ||
-                    buttonText.includes('abspann') ||
-                    button.getAttribute('data-uia')?.includes('recap') ||
-                    button.getAttribute('data-testid')?.includes('recap') ||
-                    button.getAttribute('data-testid')?.includes('Recap') ||
-                    button.getAttribute('data-t')?.includes('recap');
-
-                // Wenn es ein Recap ist, nur klicken wenn Recap-Skip aktiviert
-                if (isRecap && !this.skipRecapEnabled) {
-                    continue;
-                }
-
-                // Wenn es ein Intro ist, nur klicken wenn Intro-Skip aktiviert
-                // Default assumption: if not explicitly recap, it might be intro
-                const isIntro = buttonText.includes('intro') ||
-                    buttonText.includes('opening') ||
-                    buttonText.includes('vorspann') ||
-                    button.getAttribute('data-uia')?.includes('intro') ||
-                    button.getAttribute('data-testid')?.includes('intro') ||
-                    button.getAttribute('data-testid')?.includes('Intro') ||
-                    button.getAttribute('data-t')?.includes('intro');
-
-                // If it looks like intro (or generic/unknown) but intro skip is disabled, skip it
-                // If it's generic and we don't know, we assume intro skip controls it? 
-                // Or if intro skip is disabled, we shouldn't click random buttons.
-                if (isIntro && !this.enabled) {
-                    continue;
-                }
-
-                this.clickButton(button, selector, isRecap ? 'Recap' : 'Intro');
-                return; // Nur einen Button pro Check klicken
-            }
-        }
+    if (settings.autoSkip?.debugMode) {
+      console.log("[SkipIt] No suitable video found, checking URL patterns...");
     }
 
+    // Also check URL patterns for streaming sites
+    const playbackPatterns = {
+      disney: ["/video/", "/play/", "/watch", "/episode", "/movie"],
+      netflix: ["/watch/"],
+      amazon: ["/watch/", "/detail/", "/gp/video/"],
+      hbo: ["/player/", "/episode/"],
+      crunchyroll: ["/watch/"],
+      appletv: ["/episode/", "/movie/"],
+      paramount: ["/video/"],
+      peacock: ["/watch/"],
+    };
 
-
-    findButtonByText(text) {
-        // Crunchyroll uses div elements, not buttons - search more broadly
-        const elements = document.querySelectorAll('button, a, div[tabindex], span[tabindex], [role="button"], div[data-testid*="skip"], div[class*="skip"]');
-        for (const element of elements) {
-            const elementText = element.textContent.trim().toLowerCase();
-            const searchText = text.toLowerCase();
-            if (elementText.includes(searchText)) {
-                return element;
-            }
+    const patterns = playbackPatterns[platform] || [];
+    for (const pattern of patterns) {
+      if (url.includes(pattern)) {
+        if (settings.autoSkip?.debugMode) {
+          console.log("[SkipIt] URL pattern matched:", pattern);
         }
-        return null;
+        return true;
+      }
     }
 
-    isButtonVisible(button) {
-        // Prüfe ob Button sichtbar ist
-        const rect = button.getBoundingClientRect();
-        const style = window.getComputedStyle(button);
+    return false;
+  }
 
-        return (
-            rect.width > 0 &&
-            rect.height > 0 &&
-            style.display !== 'none' &&
-            style.visibility !== 'hidden' &&
-            style.opacity !== '0'
+  async init() {
+    // We can access global 'settings' directly as it's kept in sync
+    this.enabled =
+      (settings.autoSkip && settings.autoSkip.introEnabled) || false;
+    this.skipRecapEnabled =
+      (settings.autoSkip && settings.autoSkip.recapEnabled) || false;
+
+    // Stop if previously running
+    this.stop();
+
+    // If neither is enabled, do nothing
+    if (!this.enabled && !this.skipRecapEnabled) return;
+
+    // Only run auto-skip on supported streaming platforms
+    if (!isSupportedStreamingPlatform()) {
+      if (settings.autoSkip?.debugMode) {
+        console.log(
+          "[SkipIt] Auto-Skip disabled: Not a supported streaming platform"
         );
+      }
+      return;
     }
 
-    wasClicked(button) {
-        // Erstelle eindeutige ID für Button - not perfect but okay for DOM elements
-        // Using outerHTML might be too large/variable. Using reference + time?
-        // The Set stores strings, so outerHTML is used. 
-        // Ideally we shouldn't store large strings.
-        // But since pages reload/change, simple check.
-        const buttonId = button.outerHTML;
-        return this.clickedButtons.has(buttonId);
+    // Check license: Free users can only use Auto-Skip on Netflix/YouTube
+    const platform = getPlatform(window.location.hostname);
+    if (!License.canUseAutoSkip(platform)) {
+      if (settings.autoSkip?.debugMode) {
+        console.log(
+          "[SkipIt] Auto-Skip on this platform requires Premium:",
+          platform
+        );
+      }
+      return;
     }
 
-    markAsClicked(button) {
-        const buttonId = button.outerHTML;
-        this.clickedButtons.add(buttonId);
+    this.startWatching();
+  }
 
-        // Nach 30 Sekunden aus Set entfernen (falls Button erneut erscheint? usually not for same intro)
-        setTimeout(() => {
-            this.clickedButtons.delete(buttonId);
-        }, 30000);
-    }
+  startWatching() {
+    // Polling: Alle X Millisekunden nach Button suchen
+    this.intervalId = setInterval(() => {
+      if (this.enabled || this.skipRecapEnabled) {
+        this.checkForSkipButton();
+      }
+    }, settings.autoSkip?.buttonCheckInterval || this.checkInterval);
 
-    clickButton(button, selector, type) {
-        this.lastClickTime = Date.now(); // Update immediately
-        const delay = settings.autoSkip?.clickDelay || 500;
-
-        setTimeout(() => {
-            try {
-                button.click();
-                this.markAsClicked(button);
-
-                if (settings.autoSkip?.debugMode) console.log(`[SkipIt] ${type}-Button geklickt (Selector: ${selector})`);
-
-                // Optional: Visuelles Feedback (kurzes Highlight des Buttons)
-                this.highlightButton(button);
-
-                // Statistiken aktualisieren
-                this.updateStats(type);
-
-                // Optional: Notification anzeigen
-                // Optional: Notification anzeigen
-                if (settings.autoSkip?.showNotifications) {
-                    this.showNotification(type); // Fixed: showSkipNotification -> showNotification
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }, delay);
-    }
-
-
-    highlightButton(button) {
-        // Kurze visuelle Bestätigung für Debugging
-        const originalOutline = button.style.outline;
-        button.style.outline = '3px solid #00ff00';
-        setTimeout(() => {
-            button.style.outline = originalOutline;
+    // MutationObserver: Auf neue Buttons reagieren (with debounce)
+    this.mutationTimeout = null;
+    this.observer = new MutationObserver(() => {
+      if (this.enabled || this.skipRecapEnabled) {
+        // Debounce mutation observer to prevent excessive calls
+        if (this.mutationTimeout) clearTimeout(this.mutationTimeout);
+        this.mutationTimeout = setTimeout(() => {
+          this.checkForSkipButton();
         }, 500);
+      }
+    });
+
+    this.observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: false, // Don't watch attribute changes
+      characterData: false, // Don't watch text changes
+    });
+
+    if (settings.autoSkip?.debugMode) {
+      const platform = getPlatform(window.location.hostname);
+      console.log("[SkipIt] Auto-Skipper activated");
+      console.log("- Platform:", platform);
+      console.log("- Intro Skip:", this.enabled);
+      console.log("- Recap Skip:", this.skipRecapEnabled);
+      console.log(
+        "- Selectors for platform:",
+        SKIP_BUTTON_SELECTORS[platform]?.length || 0
+      );
+    }
+  }
+
+  checkForSkipButton() {
+    // Debounce: Nicht zu oft klicken
+    const now = Date.now();
+    if (now - this.lastClickTime < this.clickDebounceMs) {
+      return;
     }
 
-    updateStats(type) {
-        // Average time saved per skip (in seconds)
-        const AVG_INTRO_SECONDS = 30;
-        const AVG_RECAP_SECONDS = 45;
-        
-        chrome.storage.sync.get('stats', (data) => {
-            const stats = data.stats || { introsSkipped: 0, recapsSkipped: 0, totalTimeSaved: 0 };
+    const platform = getPlatform(window.location.hostname);
 
-            if (type === 'Intro') {
-                stats.introsSkipped = (stats.introsSkipped || 0) + 1;
-                stats.totalTimeSaved = (stats.totalTimeSaved || 0) + AVG_INTRO_SECONDS;
-            } else if (type === 'Recap') {
-                stats.recapsSkipped = (stats.recapsSkipped || 0) + 1;
-                stats.totalTimeSaved = (stats.totalTimeSaved || 0) + AVG_RECAP_SECONDS;
-            }
+    // Only search for skip buttons on video playback pages
+    // This prevents false positives on main pages, browse pages, etc.
+    const isPlaybackPage = this.isVideoPlaybackPage();
+    if (settings.autoSkip?.debugMode) {
+      console.log("[SkipIt] isPlaybackPage result:", isPlaybackPage);
+    }
+    if (!isPlaybackPage) {
+      if (settings.autoSkip?.debugMode) {
+        console.log("[SkipIt] Not a playback page, skipping check");
+      }
+      return;
+    }
 
-            chrome.storage.sync.set({ stats });
+    // Only use platform-specific selectors, no generic selectors
+    // This prevents false positives on non-streaming sites
+    const selectors = SKIP_BUTTON_SELECTORS[platform] || [];
+
+    if (settings.autoSkip?.debugMode) {
+      console.log(
+        "[SkipIt] Searching for skip buttons, selectors:",
+        selectors.length
+      );
+    }
+
+    // If no selectors for this platform, don't try to skip anything
+    if (selectors.length === 0) {
+      return;
+    }
+
+    let foundButton = null;
+    let foundSelector = null;
+
+    // First, try all platform-specific selectors
+    for (const selector of selectors) {
+      let button = null;
+
+      // Standard querySelector
+      if (!selector.includes(":has-text")) {
+        button = document.querySelector(selector);
+        if (button && settings.autoSkip?.debugMode) {
+          console.log("[SkipIt] Found button with selector:", selector);
+        }
+      } else {
+        // Text-basierte Suche
+        const searchText = selector.match(/\("(.+)"\)/)?.[1];
+        if (searchText) {
+          button = this.findButtonByText(searchText);
+        }
+      }
+
+      if (button) {
+        const isVisible = this.isButtonVisible(button);
+        const wasClicked = this.wasClicked(button);
+        if (settings.autoSkip?.debugMode) {
+          console.log("[SkipIt] Button check:", {
+            selector: selector.substring(0, 50),
+            visible: isVisible,
+            alreadyClicked: wasClicked,
+            text: button.textContent?.substring(0, 30),
+          });
+        }
+        if (isVisible && !wasClicked) {
+          foundButton = button;
+          foundSelector = selector;
+          break;
+        }
+      }
+    }
+
+    // Fallback: Use the generic multi-language skip button finder
+    if (!foundButton) {
+      if (settings.autoSkip?.debugMode) {
+        console.log(
+          "[SkipIt] No button found with selectors, trying generic search..."
+        );
+      }
+      foundButton = this.findAnySkipButton();
+      if (foundButton && !this.wasClicked(foundButton)) {
+        foundSelector = "generic-skip-search";
+        if (settings.autoSkip?.debugMode) {
+          console.log(
+            "[SkipIt] Found skip button via generic search:",
+            foundButton.textContent.trim()
+          );
+        }
+      } else {
+        if (settings.autoSkip?.debugMode) {
+          console.log("[SkipIt] No skip button found on page");
+        }
+        foundButton = null;
+      }
+    }
+
+    if (foundButton) {
+      // Prüfe ob es ein Recap/Credits Button ist und ob das aktiviert ist
+      const buttonText = foundButton.textContent.toLowerCase();
+      const ariaLabel = (
+        foundButton.getAttribute("aria-label") || ""
+      ).toLowerCase();
+      const dataTestId = (
+        foundButton.getAttribute("data-testid") || ""
+      ).toLowerCase();
+      const dataUia = (
+        foundButton.getAttribute("data-uia") || ""
+      ).toLowerCase();
+
+      const isRecap =
+        buttonText.includes("recap") ||
+        buttonText.includes("rückblick") ||
+        buttonText.includes("zusammenfassung") ||
+        buttonText.includes("credits") ||
+        buttonText.includes("abspann") ||
+        ariaLabel.includes("recap") ||
+        ariaLabel.includes("rückblick") ||
+        ariaLabel.includes("zusammenfassung") ||
+        ariaLabel.includes("abspann") ||
+        dataUia.includes("recap") ||
+        dataTestId.includes("recap") ||
+        dataTestId.includes("credits");
+
+      // Wenn es ein Recap ist, nur klicken wenn Recap-Skip aktiviert
+      if (isRecap && !this.skipRecapEnabled) {
+        return;
+      }
+
+      // Wenn es ein Intro ist, nur klicken wenn Intro-Skip aktiviert
+      // Default assumption: if not explicitly recap, it might be intro
+      const isIntro =
+        buttonText.includes("intro") ||
+        buttonText.includes("opening") ||
+        buttonText.includes("vorspann") ||
+        ariaLabel.includes("intro") ||
+        ariaLabel.includes("vorspann") ||
+        dataUia.includes("intro") ||
+        dataTestId.includes("intro") ||
+        dataTestId.includes("skip-intro");
+
+      // If it looks like intro (or generic/unknown) but intro skip is disabled, skip it
+      if (isIntro && !this.enabled) {
+        return;
+      }
+
+      // For unknown buttons (neither clearly intro nor recap),
+      // click if either intro or recap skip is enabled
+      if (!isIntro && !isRecap && !this.enabled && !this.skipRecapEnabled) {
+        return;
+      }
+
+      this.clickButton(foundButton, foundSelector, isRecap ? "Recap" : "Intro");
+    }
+  }
+
+  findButtonByText(text) {
+    // Search broadly for skip buttons - Disney+ and others use various elements
+    const elements = document.querySelectorAll(
+      'button, a, div[tabindex], span[tabindex], [role="button"], div[data-testid*="skip"], div[data-testid*="Skip"], div[class*="skip"], div[class*="Skip"], span[class*="skip"], span[class*="Skip"], [class*="button"], [class*="Button"]'
+    );
+    const searchText = text.toLowerCase();
+
+    for (const element of elements) {
+      // Check text content
+      const elementText = element.textContent.trim().toLowerCase();
+      if (elementText.includes(searchText)) {
+        return element;
+      }
+
+      // Check aria-label
+      const ariaLabel = (
+        element.getAttribute("aria-label") || ""
+      ).toLowerCase();
+      if (ariaLabel.includes(searchText)) {
+        return element;
+      }
+
+      // Check title attribute
+      const title = (element.getAttribute("title") || "").toLowerCase();
+      if (title.includes(searchText)) {
+        return element;
+      }
+    }
+    return null;
+  }
+
+  // Additional function to find any skip button on the page (language-agnostic)
+  findAnySkipButton() {
+    const skipKeywords = [
+      // English
+      "skip",
+      "skip intro",
+      "skip recap",
+      "skip credits",
+      "skip opening",
+      // German
+      "überspringen",
+      "intro überspringen",
+      "vorspann überspringen",
+      "rückblick überspringen",
+      "zusammenfassung überspringen",
+      "abspann überspringen",
+      // French
+      "passer",
+      "ignorer",
+      // Spanish
+      "saltar",
+      "omitir",
+      // Italian
+      "salta",
+      "passa",
+      // Portuguese
+      "pular",
+      // Dutch
+      "overslaan",
+    ];
+
+    // Search all interactive elements
+    const allElements = document.querySelectorAll(
+      'button, a, div[tabindex], span[tabindex], [role="button"], [class*="skip"], [class*="Skip"], [class*="button"], [class*="Button"]'
+    );
+
+    for (const element of allElements) {
+      const elementText = element.textContent.trim().toLowerCase();
+      const ariaLabel = (
+        element.getAttribute("aria-label") || ""
+      ).toLowerCase();
+      const title = (element.getAttribute("title") || "").toLowerCase();
+      // Handle SVG elements where className is an object
+      let className = "";
+      if (typeof element.className === "string") {
+        className = element.className.toLowerCase();
+      } else if (element.className?.baseVal) {
+        className = element.className.baseVal.toLowerCase();
+      }
+      const dataTestId = (
+        element.getAttribute("data-testid") || ""
+      ).toLowerCase();
+
+      // Check if any skip keyword matches
+      for (const keyword of skipKeywords) {
+        if (
+          elementText.includes(keyword) ||
+          ariaLabel.includes(keyword) ||
+          title.includes(keyword) ||
+          className.includes(keyword.replace(" ", "")) ||
+          dataTestId.includes(keyword.replace(" ", ""))
+        ) {
+          // Make sure it's visible
+          if (this.isButtonVisible(element)) {
+            return element;
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  isButtonVisible(button) {
+    // Prüfe ob Button sichtbar ist
+    const rect = button.getBoundingClientRect();
+    const style = window.getComputedStyle(button);
+
+    return (
+      rect.width > 0 &&
+      rect.height > 0 &&
+      style.display !== "none" &&
+      style.visibility !== "hidden" &&
+      style.opacity !== "0"
+    );
+  }
+
+  wasClicked(button) {
+    // Erstelle eindeutige ID für Button - not perfect but okay for DOM elements
+    // Using outerHTML might be too large/variable. Using reference + time?
+    // The Set stores strings, so outerHTML is used.
+    // Ideally we shouldn't store large strings.
+    // But since pages reload/change, simple check.
+    const buttonId = button.outerHTML;
+    return this.clickedButtons.has(buttonId);
+  }
+
+  markAsClicked(button) {
+    const buttonId = button.outerHTML;
+    this.clickedButtons.add(buttonId);
+
+    // Nach 30 Sekunden aus Set entfernen (falls Button erneut erscheint? usually not for same intro)
+    setTimeout(() => {
+      this.clickedButtons.delete(buttonId);
+    }, 30000);
+  }
+
+  clickButton(button, selector, type) {
+    this.lastClickTime = Date.now(); // Update immediately
+    const delay = settings.autoSkip?.clickDelay || 500;
+
+    setTimeout(() => {
+      try {
+        // Use robust click method for React/Vue-based sites like Disney+
+        this.simulateRealClick(button);
+        this.markAsClicked(button);
+
+        if (settings.autoSkip?.debugMode)
+          console.log(
+            `[SkipIt] ${type} button clicked (Selector: ${selector})`
+          );
+
+        // Optional: Visuelles Feedback (kurzes Highlight des Buttons)
+        this.highlightButton(button);
+
+        // Statistiken aktualisieren
+        this.updateStats(type);
+
+        // Optional: Notification anzeigen
+        if (settings.autoSkip?.showNotifications) {
+          this.showNotification(type);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }, delay);
+  }
+
+  // Robust click simulation for React/Vue-based sites (Disney+, etc.)
+  simulateRealClick(element) {
+    const platform = getPlatform(window.location.hostname);
+
+    // For Amazon Prime Video, use simple click to avoid triggering other controls
+    if (platform === "amazon") {
+      this.performSimpleClick(element);
+      if (settings.autoSkip?.debugMode) {
+        console.log("[SkipIt] Simple click on Amazon element");
+      }
+      return;
+    }
+
+    // For other platforms (Disney+, etc.), try multiple targets
+    const clickTargets = this.getClickTargets(element);
+
+    for (const target of clickTargets) {
+      this.performClick(target);
+    }
+
+    if (settings.autoSkip?.debugMode) {
+      console.log(
+        "[SkipIt] Simulated clicks on",
+        clickTargets.length,
+        "targets"
+      );
+    }
+  }
+
+  // Simple click for platforms that don't need complex event simulation
+  performSimpleClick(element) {
+    try {
+      // Focus first
+      if (element.focus) element.focus();
+
+      // Try native click
+      if (element.click) {
+        element.click();
+      }
+
+      // Also dispatch a basic click event
+      const clickEvent = new MouseEvent("click", {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+      });
+      element.dispatchEvent(clickEvent);
+    } catch (e) {
+      if (settings.autoSkip?.debugMode) {
+        console.log("[SkipIt] Simple click error:", e);
+      }
+    }
+  }
+
+  // Get all potential click targets (element, children, parents)
+  getClickTargets(element) {
+    const targets = new Set();
+
+    // Add the element itself
+    targets.add(element);
+
+    // Add clickable child elements (buttons, spans, divs - but NOT links that could navigate)
+    const children = element.querySelectorAll(
+      'button, [role="button"], [tabindex], span, div'
+    );
+    children.forEach((child) => {
+      // Skip elements that could cause navigation
+      if (!this.couldCauseNavigation(child)) {
+        targets.add(child);
+      }
+    });
+
+    // Add parent elements up to 2 levels (reduced from 3 to be safer)
+    let parent = element.parentElement;
+    for (let i = 0; i < 2 && parent; i++) {
+      if (
+        parent.tagName !== "BODY" &&
+        parent.tagName !== "HTML" &&
+        !this.couldCauseNavigation(parent)
+      ) {
+        targets.add(parent);
+      }
+      parent = parent.parentElement;
+    }
+
+    return Array.from(targets);
+  }
+
+  // Check if clicking an element could cause page navigation
+  couldCauseNavigation(element) {
+    try {
+      // Check if it's a link with href
+      if (element.tagName === "A" && element.href) {
+        return true;
+      }
+      // Check for navigation-related classes or roles
+      // className can be an SVGAnimatedString for SVG elements, so handle that
+      let className = "";
+      if (typeof element.className === "string") {
+        className = element.className.toLowerCase();
+      } else if (element.className?.baseVal) {
+        className = element.className.baseVal.toLowerCase();
+      }
+      const role = (element.getAttribute("role") || "").toLowerCase();
+      if (
+        className.includes("nav") ||
+        className.includes("menu") ||
+        className.includes("link") ||
+        role === "link" ||
+        role === "navigation"
+      ) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false; // If we can't check, assume it's safe
+    }
+  }
+
+  // Perform comprehensive click on a single element
+  performClick(element) {
+    const rect = element.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+
+    const eventOptions = {
+      bubbles: true,
+      cancelable: true,
+      view: window,
+      button: 0,
+      buttons: 1,
+      clientX: x,
+      clientY: y,
+      screenX: x + window.screenX,
+      screenY: y + window.screenY,
+    };
+
+    try {
+      // Focus the element
+      if (element.focus) element.focus();
+
+      // Pointer events (for React)
+      element.dispatchEvent(new PointerEvent("pointerover", eventOptions));
+      element.dispatchEvent(new PointerEvent("pointerenter", eventOptions));
+      element.dispatchEvent(
+        new PointerEvent("pointerdown", { ...eventOptions, isPrimary: true })
+      );
+      element.dispatchEvent(
+        new PointerEvent("pointerup", { ...eventOptions, isPrimary: true })
+      );
+
+      // Mouse events
+      element.dispatchEvent(new MouseEvent("mouseover", eventOptions));
+      element.dispatchEvent(new MouseEvent("mouseenter", eventOptions));
+      element.dispatchEvent(new MouseEvent("mousedown", eventOptions));
+      element.dispatchEvent(new MouseEvent("mouseup", eventOptions));
+      element.dispatchEvent(new MouseEvent("click", eventOptions));
+
+      // Touch events (for hybrid/mobile-optimized sites)
+      try {
+        const touch = new Touch({
+          identifier: Date.now(),
+          target: element,
+          clientX: x,
+          clientY: y,
+          screenX: x + window.screenX,
+          screenY: y + window.screenY,
         });
+        element.dispatchEvent(
+          new TouchEvent("touchstart", {
+            bubbles: true,
+            cancelable: true,
+            touches: [touch],
+            targetTouches: [touch],
+          })
+        );
+        element.dispatchEvent(
+          new TouchEvent("touchend", {
+            bubbles: true,
+            cancelable: true,
+            touches: [],
+            targetTouches: [],
+          })
+        );
+      } catch (e) {
+        // Touch events not supported in this context
+      }
+
+      // Keyboard activation (Enter/Space)
+      element.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          bubbles: true,
+          cancelable: true,
+          key: "Enter",
+          code: "Enter",
+        })
+      );
+      element.dispatchEvent(
+        new KeyboardEvent("keyup", {
+          bubbles: true,
+          cancelable: true,
+          key: "Enter",
+          code: "Enter",
+        })
+      );
+
+      // Native click
+      if (element.click) element.click();
+    } catch (e) {
+      // Ignore errors for individual elements
     }
+  }
 
-    showNotification(type) {
-        const messages = {
-            'Intro': '⏩ Intro skipped',
-            'Recap': '⏩ Recap skipped'
-        };
+  highlightButton(button) {
+    // Kurze visuelle Bestätigung für Debugging
+    const originalOutline = button.style.outline;
+    button.style.outline = "3px solid #00ff00";
+    setTimeout(() => {
+      button.style.outline = originalOutline;
+    }, 500);
+  }
 
-        const notification = document.createElement('div');
-        notification.textContent = messages[type] || '⏩ Skipped';
-        notification.style.cssText = `
+  updateStats(type) {
+    // Average time saved per skip (in seconds)
+    const AVG_INTRO_SECONDS = 30;
+    const AVG_RECAP_SECONDS = 45;
+
+    chrome.storage.sync.get("stats", (data) => {
+      const stats = data.stats || {
+        introsSkipped: 0,
+        recapsSkipped: 0,
+        totalTimeSaved: 0,
+      };
+
+      if (type === "Intro") {
+        stats.introsSkipped = (stats.introsSkipped || 0) + 1;
+        stats.totalTimeSaved = (stats.totalTimeSaved || 0) + AVG_INTRO_SECONDS;
+      } else if (type === "Recap") {
+        stats.recapsSkipped = (stats.recapsSkipped || 0) + 1;
+        stats.totalTimeSaved = (stats.totalTimeSaved || 0) + AVG_RECAP_SECONDS;
+      }
+
+      chrome.storage.sync.set({ stats });
+    });
+  }
+
+  showNotification(type) {
+    const messages = {
+      Intro: "⏩ Intro skipped",
+      Recap: "⏩ Recap skipped",
+    };
+
+    const notification = document.createElement("div");
+    notification.textContent = messages[type] || "⏩ Skipped";
+    notification.style.cssText = `
       position: fixed;
       top: 20px;
       right: 20px;
@@ -891,11 +1491,11 @@ class IntroSkipper {
       pointer-events: none;
     `;
 
-        // Check if style exists
-        if (!document.getElementById('vsc-styles')) {
-            const style = document.createElement('style');
-            style.id = 'vsc-styles';
-            style.textContent = `
+    // Check if style exists
+    if (!document.getElementById("vsc-styles")) {
+      const style = document.createElement("style");
+      style.id = "vsc-styles";
+      style.textContent = `
         @keyframes vscSlideIn {
             from { transform: translateX(400px); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -905,24 +1505,24 @@ class IntroSkipper {
             to { transform: translateX(400px); opacity: 0; }
         }
         `;
-            document.head.appendChild(style);
-        }
-
-        document.body.appendChild(notification);
-        setTimeout(() => {
-            notification.style.animation = 'vscSlideOut 0.3s ease';
-            setTimeout(() => notification.remove(), 280);
-        }, 2500);
+      document.head.appendChild(style);
     }
 
-    stop() {
-        if (this.intervalId) {
-            clearInterval(this.intervalId);
-            this.intervalId = null;
-        }
-        if (this.observer) {
-            this.observer.disconnect();
-            this.observer = null;
-        }
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      notification.style.animation = "vscSlideOut 0.3s ease";
+      setTimeout(() => notification.remove(), 280);
+    }, 2500);
+  }
+
+  stop() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
     }
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
+  }
 }
