@@ -35,11 +35,26 @@ chrome.runtime.onInstalled.addListener((details) => {
         opacity: 0.8
       },
       perSiteSettings: {},
+      siteSettings: {},
       blacklist: []
     };
 
     chrome.storage.sync.set(defaultSettings, () => {
       console.log('Default settings saved');
     });
+  }
+});
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "keyPress") {
+    // Relay to all frames in the tab
+    if (sender.tab) {
+      chrome.tabs.sendMessage(sender.tab.id, {
+        action: "simulateKey",
+        key: request.key,
+        code: request.code,
+        shiftKey: request.shiftKey
+      });
+    }
   }
 });

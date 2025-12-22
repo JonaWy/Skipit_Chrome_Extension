@@ -138,6 +138,16 @@ function getPlatform(hostname) {
 // Initialize
 chrome.storage.sync.get(null, (items) => {
     settings = items;
+    // Check if site is enabled
+    const host = window.location.hostname;
+    const platform = getPlatform(host);
+
+    // Default to true if not present
+    if (settings.siteSettings && settings.siteSettings[platform] === false) {
+        console.log('[Video Speed Controller+] Disabled on this site');
+        return;
+    }
+
     initialize();
     if (introSkipper) introSkipper.init();
 });
@@ -273,18 +283,29 @@ function handleKeydown(e) {
     e.preventDefault();
     e.stopPropagation();
 
+    // Check local video first
     const video = getTargetVideo();
-    if (!video) return;
 
-    if (action === 'faster') {
-        changeSpeed(video, 0.25);
-    } else if (action === 'slower') {
-        changeSpeed(video, -0.25);
-    } else if (action.startsWith('preset')) {
-        const index = parseInt(action.replace('preset', '')) - 1;
-        if (settings.presets && settings.presets[index]) {
-            setSpeed(video, settings.presets[index]);
+    if (video) {
+        if (action === 'faster') {
+            changeSpeed(video, 0.25);
+        } else if (action === 'slower') {
+            changeSpeed(video, -0.25);
+        } else if (action.startsWith('preset')) {
+            const index = parseInt(action.replace('preset', '')) - 1;
+            if (settings.presets && settings.presets[index]) {
+                setSpeed(video, settings.presets[index]);
+            }
         }
+    } else {
+        // No video found in this frame (e.g. we are Top Frame, video is in Iframe)
+        // Send to background to relay to other frames in this tab
+        chrome.runtime.sendMessage({
+            action: "keyPress",
+            key: key,
+            code: e.code,
+            shiftKey: e.shiftKey
+        });
     }
 }
 
@@ -338,6 +359,13 @@ function setSpeed(video, speed) {
     video.playbackRate = speed;
     showOsd(speed);
     savePerSiteSpeed(speed);
+
+    // Notify popup (if open)
+    try {
+        chrome.runtime.sendMessage({ action: "speedUpdate", speed: speed });
+    } catch (e) {
+        // Ignored, happens if no listener (popup closed)
+    }
 }
 
 function savePerSiteSpeed(speed) {
@@ -395,12 +423,74 @@ function toggleOsd() {
 
 // Listen for messages from Popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    // If settings aren't loaded or site is disabled, don't execute actions
+    if (!settings.siteSettings) {
+        // If settings are empty, we might not have loaded them yet or it's a fresh install.
+        // But usually content script runs get() on load.
+        // We can check if site is disabled if we have settings.
+        // If we don't have settings yet, we probably shouldn't act, or should default to enabled.
+        // However, correct behavior for "disabled site" is to not act.
+    }
+
+    const host = window.location.hostname;
+    const platform = getPlatform(host);
+
+    try {
+        if (settings && settings.siteSettings && settings.siteSettings[platform] === false) {
+            // Site is explicitly disabled - Ignore commands
+            if (request.action === "getSpeed") {
+                sendResponse({ speed: 1.0, disabled: true });
+                return;
+            }
+            if (request.action === "setSpeed") {
+                return; // Do nothing
+            }
+        }
+    } catch (e) {
+        // Fallback to enabled if check fails
+        console.error("[Video Speed Controller+] Error checking disabled status:", e);
+    }
+
     if (request.action === "getSpeed") {
         const v = getTargetVideo();
-        sendResponse({ speed: v ? v.playbackRate : 1.0 });
+        // Only respond if we found a video, otherwise let other frames answer
+        if (v) {
+            sendResponse({ speed: v.playbackRate });
+        }
     } else if (request.action === "setSpeed") {
+        console.log('[VSC+] Received setSpeed:', request.speed);
         const v = getTargetVideo();
-        if (v) setSpeed(v, request.speed);
+        console.log('[VSC+] Target video:', v ? 'found' : 'NOT FOUND');
+        if (v) {
+            setSpeed(v, request.speed);
+            console.log('[VSC+] Speed set to:', request.speed);
+        }
+    } else if (request.action === "simulateKey") {
+        const video = getTargetVideo();
+        if (video) {
+            // Re-use logic or call simplified handler
+            // Just map keys to actions directly
+            const key = request.key;
+            let action = null;
+            if (key === '+' || key === 'NumpadAdd' || key === 'Add' || (key === '=' && request.shiftKey)) action = 'faster';
+            else if (key === '-' || key === 'NumpadSubtract' || key === 'Subtract') action = 'slower';
+            // presets... 
+            else if (key === '1') action = 'preset1';
+            else if (key === '2') action = 'preset2';
+            else if (key === '3') action = 'preset3';
+            else if (key === '4') action = 'preset4';
+
+            if (action) {
+                if (action === 'faster') changeSpeed(video, 0.25);
+                else if (action === 'slower') changeSpeed(video, -0.25);
+                else if (action.startsWith('preset')) {
+                    const index = parseInt(action.replace('preset', '')) - 1;
+                    if (settings.presets && settings.presets[index]) {
+                        setSpeed(video, settings.presets[index]);
+                    }
+                }
+            }
+        }
     }
 });
 

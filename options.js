@@ -9,30 +9,61 @@ const shortcutLabels = {
     faster: "Schneller (+0.25)",
     slower: "Langsamer (-0.25)"
 };
+const supportedSites = [
+    { id: 'netflix', name: 'Netflix' },
+    { id: 'disney', name: 'Disney+' },
+    { id: 'amazon', name: 'Prime Video' },
+    { id: 'youtube', name: 'YouTube' },
+    { id: 'crunchyroll', name: 'Crunchyroll' },
+    { id: 'hbo', name: 'HBO Max' },
+    { id: 'appletv', name: 'Apple TV+' },
+    { id: 'paramount', name: 'Paramount+' },
+    { id: 'peacock', name: 'Peacock' },
+    { id: 'generic', name: 'Andere Webseiten' }
+];
 
 document.addEventListener('DOMContentLoaded', () => {
     loadSettings();
 
-    document.getElementById('saveBtn').addEventListener('click', saveSettings);
+    // document.getElementById('saveBtn') is removed
     document.getElementById('resetBtn').addEventListener('click', resetSettings);
     document.getElementById('resetStats').addEventListener('click', resetStats);
-
-    // Instant Dark Mode Preview
-    document.getElementById('darkMode').addEventListener('change', (e) => {
-        if (e.target.checked) document.body.classList.add('dark-mode');
-        else document.body.classList.remove('dark-mode');
-    });
 });
+
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
+const debouncedSave = debounce(saveSettings, 600);
+
+function attachAutoSave() {
+    // Attach to all inputs
+    const inputs = document.querySelectorAll('input, select');
+    inputs.forEach(el => {
+        // Avoid double binding if called multiple times? 
+        // Simple way: clear old listeners? No, easier to just use { once: true } or ensure called once.
+        // Since loadSettings overwrites innerHTML for some containers, new elements need new listeners.
+        // Static elements (like checkboxes) only need listeners once if not overwritten.
+        // But simpler: just re-attach to everything? 
+        // We will attach explicitly to dynamic elements in loadSettings and static ones here?
+        // Let's attach to ALREADY EXISTING static inputs now, and dynamic ones in loadSettings.
+
+        // Actually best place is in loadSettings after everything is ready.
+        // But for static inputs (clickDelay etc) they exist on load.
+    });
+}
 
 function loadSettings() {
     chrome.storage.sync.get(null, (settings) => {
         // Dark Mode
         if (settings.darkMode) {
             document.body.classList.add('dark-mode');
-            document.getElementById('darkMode').checked = true;
         } else {
             document.body.classList.remove('dark-mode');
-            document.getElementById('darkMode').checked = false;
         }
 
         // Shortcuts
@@ -53,7 +84,6 @@ function loadSettings() {
             scContainer.appendChild(row);
         });
 
-        // Monitor key events for hardcoded presets
         // Presets
         const pContainer = document.getElementById('presetsContainer');
         pContainer.innerHTML = '';
@@ -72,92 +102,113 @@ function loadSettings() {
             pContainer.appendChild(row);
         }
 
+        // Streaming Services
+        const sContainer = document.getElementById('servicesContainer');
+        sContainer.innerHTML = '';
+        const siteSettings = settings.siteSettings || {};
 
+        supportedSites.forEach(site => {
+            const isEnabled = siteSettings[site.id] !== false; // Default true
+            const div = document.createElement('label');
+            // Reusing toggle-container style from HTML structure logic
+            div.className = 'toggle-container';
+            div.innerHTML = `
+                <span class="toggle-label">${site.name}</span>
+                <input type="checkbox" id="site_${site.id}" class="toggle-checkbox" ${isEnabled ? 'checked' : ''}>
+                <span class="toggle-switch"></span>
+            `;
+            sContainer.appendChild(div);
+        });
 
-
-        // Auto Skip
-        document.getElementById('introEnabled').checked = settings.autoSkip?.introEnabled || false;
-        document.getElementById('recapSkipEnabled').checked = settings.autoSkip?.recapEnabled || false;
-
+        // Auto Skip Static Inputs
         document.getElementById('showNotifications').checked = settings.autoSkip?.showNotifications !== false; // Default true
-
         document.getElementById('clickDelay').value = settings.autoSkip?.clickDelay || 500;
-
-        // document.getElementById('outroEnabled').checked = settings.autoSkip?.outroEnabled || false;
-        // document.getElementById('outroSeconds').value = settings.autoSkip?.outroSeconds || 15;
         document.getElementById('debugMode').checked = settings.autoSkip?.debugMode || false;
 
         // Stats
         if (settings.stats) {
             document.getElementById('statIntros').textContent = settings.stats.introsSkipped || 0;
             document.getElementById('statRecaps').textContent = settings.stats.recapsSkipped || 0;
-
         }
 
         // OSD
         document.getElementById('osdEnabled').checked = settings.osd?.enabled !== false;
         document.getElementById('osdPosition').value = settings.osd?.position || 'top-right';
+
+        // ATTACH LISTENERS TO EVERYTHING NOW
+        document.querySelectorAll('input, select').forEach(el => {
+            // Checkboxes and Selects -> Immediate Save
+            if (el.type === 'checkbox' || el.tagName === 'SELECT') {
+                el.addEventListener('change', saveSettings);
+            } else {
+                // Text/Number inputs -> Debounced Save
+                el.addEventListener('input', debouncedSave);
+            }
+        });
     });
 }
 
 function saveSettings() {
-    const newSettings = {
-        darkMode: document.getElementById('darkMode').checked,
-        shortcuts: {},
-        presets: [],
-        presetNames: [],
-        autoSkip: {},
-        osd: {}
-    };
+    chrome.storage.sync.get(['autoSkip'], (data) => {
+        const existingAutoSkip = data.autoSkip || {};
 
-    // Shortcuts
-    document.querySelectorAll('[id^="sc_"]').forEach(input => {
-        const key = input.id.replace('sc_', '');
-        newSettings.shortcuts[key] = input.value.toLowerCase();
-    });
+        const newSettings = {
+            shortcuts: {},
+            presets: [],
+            presetNames: [],
+            autoSkip: {},
+            osd: {}
+        };
 
+        // Shortcuts
+        document.querySelectorAll('[id^="sc_"]').forEach(input => {
+            const key = input.id.replace('sc_', '');
+            newSettings.shortcuts[key] = input.value.toLowerCase();
+        });
 
+        // Presets
+        for (let i = 0; i < 4; i++) {
+            newSettings.presetNames.push(document.getElementById(`pname_${i}`).value);
+            newSettings.presets.push(parseFloat(document.getElementById(`pval_${i}`).value));
+        }
 
+        // Site Settings
+        const siteSettings = {};
+        supportedSites.forEach(site => {
+            const cb = document.getElementById(`site_${site.id}`);
+            if (cb) {
+                siteSettings[site.id] = cb.checked;
+            } else {
+                siteSettings[site.id] = true;
+            }
+        });
+        newSettings.siteSettings = siteSettings;
 
-    // Presets
-    for (let i = 0; i < 4; i++) {
-        newSettings.presetNames.push(document.getElementById(`pname_${i}`).value);
-        newSettings.presets.push(parseFloat(document.getElementById(`pval_${i}`).value));
-    }
+        // Auto Skip (Merge with existing toggles)
+        newSettings.autoSkip = {
+            ...existingAutoSkip, // Preserve introEnabled, recapEnabled
 
-    // Auto Skip
-    newSettings.autoSkip = {
-        introEnabled: document.getElementById('introEnabled').checked,
-        recapEnabled: document.getElementById('recapSkipEnabled').checked,
+            introButtonClick: true,
+            introFallbackSeconds: 10,
+            clickDelay: parseFloat(document.getElementById('clickDelay').value),
+            introSeconds: 10,
+            outroEnabled: false,
+            outroButtonClick: true,
+            outroSeconds: 15,
+            showNotifications: document.getElementById('showNotifications').checked,
+            debugMode: document.getElementById('debugMode').checked
+        };
 
-        introButtonClick: true, // Always use button click
-        introFallbackSeconds: 10, // Default fallback if needed
-        clickDelay: parseFloat(document.getElementById('clickDelay').value),
-        introSeconds: 10,
-        outroEnabled: false, // hidden/disabled for now as replaced by buttons or not prioritized
-        // outroEnabled: document.getElementById('outroEnabled').checked,
-        outroButtonClick: true,
-        outroSeconds: 15, // Default
-        showNotifications: document.getElementById('showNotifications').checked,
-        debugMode: document.getElementById('debugMode').checked
-    };
+        // OSD
+        newSettings.osd = {
+            enabled: document.getElementById('osdEnabled').checked,
+            position: document.getElementById('osdPosition').value,
+            duration: 2000
+        };
 
-    // OSD
-    newSettings.osd = {
-        enabled: document.getElementById('osdEnabled').checked,
-        position: document.getElementById('osdPosition').value,
-        duration: 2000 // Keep default for now or add input
-    };
-
-    chrome.storage.sync.set(newSettings, () => {
-        const btn = document.getElementById('saveBtn');
-        const oldText = btn.textContent;
-        btn.textContent = 'Gespeichert!';
-        btn.style.background = '#0d652d';
-        setTimeout(() => {
-            btn.textContent = oldText;
-            btn.style.background = '#8ab4f8';
-        }, 1500);
+        chrome.storage.sync.set(newSettings, () => {
+            // Auto-save silent success
+        });
     });
 }
 

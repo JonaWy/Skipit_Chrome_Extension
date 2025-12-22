@@ -16,15 +16,7 @@
             <h1 class="page-title">Einstellungen</h1>
         </div>
 
-        <!-- Appearance Card -->
-        <div class="settings-card">
-            <h2 class="card-title">Erscheinungsbild</h2>
-            <label class="toggle-container">
-                <span class="toggle-label">Dark Mode</span>
-                <input type="checkbox" id="darkMode" class="toggle-checkbox">
-                <span class="toggle-switch"></span>
-            </label>
-        </div>
+
 
         <!-- Shortcuts Card -->
         <div class="settings-card">
@@ -42,24 +34,20 @@
             </div>
         </div>
 
+        <!-- Streaming Services Card -->
+        <div class="settings-card">
+            <h2 class="card-title">Streaming-Dienste</h2>
+            <p class="description" style="margin-bottom: 16px;">
+                App für bestimmte Dienste aktivieren/deaktivieren.
+            </p>
+            <div id="servicesContainer">
+                <!-- Filled by JS -->
+            </div>
+        </div>
+
         <!-- Auto-Skip Card -->
         <div class="settings-card">
-            <h2 class="card-title">Auto-Skip</h2>
-
-            <label class="toggle-container">
-                <span class="toggle-label">Intro automatisch überspringen</span>
-                <input type="checkbox" id="introEnabled" class="toggle-checkbox">
-                <span class="toggle-switch"></span>
-            </label>
-
-            <label class="toggle-container">
-                <span class="toggle-label">Zusammenfassungen & Rückblicke überspringen</span>
-                <input type="checkbox" id="recapSkipEnabled" class="toggle-checkbox">
-                <span class="toggle-switch"></span>
-            </label>
-            <p class="description" style="margin-bottom: 16px;">
-                Überspringt automatisch "Previously on..." und "Recap" Buttons.
-            </p>
+            <h2 class="card-title">Auto-Skip (Erweitert)</h2>
 
             <div class="setting-item">
                 <label class="toggle-label" style="display:block; margin-bottom: 8px;">Verzögerung vor Klick
@@ -120,8 +108,7 @@
 
         <!-- Actions -->
         <div class="actions">
-            <button id="resetBtn" class="secondary-button">Standardwerte</button>
-            <button id="saveBtn" class="primary-button">Speichern</button>
+            <button id="resetBtn" class="secondary-button" style="width: 100%;">Einstellungen zurücksetzen</button>
         </div>
     </div>
     <script src="options.js"></script>

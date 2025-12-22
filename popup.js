@@ -5,11 +5,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const openOptions = document.getElementById('openOptions');
 
     // Load Settings & Presets
-    chrome.storage.sync.get(['presets', 'presetNames', 'darkMode'], (data) => {
+    chrome.storage.sync.get(['presets', 'presetNames', 'darkMode', 'autoSkip'], (data) => {
         // Apply Dark Mode
         if (data.darkMode) {
             document.body.classList.add('dark-mode');
+            const dmToggle = document.getElementById('toggleDarkMode');
+            if (dmToggle) dmToggle.checked = true;
         }
+
+        // Initialize Toggles
+        const introToggle = document.getElementById('toggleIntro');
+        const recapToggle = document.getElementById('toggleRecap');
+
+        if (introToggle) introToggle.checked = data.autoSkip?.introEnabled || false;
+        if (recapToggle) recapToggle.checked = data.autoSkip?.recapEnabled || false;
+
+        // Bind Toggle Listeners
+        // Dark Mode
+        document.getElementById('toggleDarkMode')?.addEventListener('change', (e) => {
+            const isDark = e.target.checked;
+            if (isDark) document.body.classList.add('dark-mode');
+            else document.body.classList.remove('dark-mode');
+            chrome.storage.sync.set({ darkMode: isDark });
+        });
+
+        // Intro
+        document.getElementById('toggleIntro')?.addEventListener('change', (e) => {
+            const enabled = e.target.checked;
+            // update nested object safely
+            chrome.storage.sync.get('autoSkip', (current) => {
+                const autoSkip = current.autoSkip || {};
+                autoSkip.introEnabled = enabled;
+                chrome.storage.sync.set({ autoSkip });
+            });
+        });
+
+        // Recap
+        document.getElementById('toggleRecap')?.addEventListener('change', (e) => {
+            const enabled = e.target.checked;
+            chrome.storage.sync.get('autoSkip', (current) => {
+                const autoSkip = current.autoSkip || {};
+                autoSkip.recapEnabled = enabled;
+                chrome.storage.sync.set({ autoSkip });
+            });
+        });
 
         const presets = data.presets || [1.0, 1.5, 2.0, 2.5];
         const names = data.presetNames || ["Normal", "1.5x", "2.0x", "2.5x"];
@@ -34,9 +73,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Get current speed from active tab
+    // Get current speed from active tab
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0]) {
             chrome.tabs.sendMessage(tabs[0].id, { action: "getSpeed" }, (response) => {
+                // Ignore errors (timeouts if no video found on page)
+                if (chrome.runtime.lastError) return;
+
+                if (response && response.disabled) {
+                    showDisabledState();
+                    return;
+                }
                 if (response && response.speed !== undefined) {
                     updateUI(response.speed);
                 }
@@ -44,17 +91,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    function showDisabledState() {
+        // Visual indication
+        document.body.classList.add('disabled-state');
+        speedSlider.disabled = true;
+        speedDisplay.textContent = "OFF";
+        presetContainer.style.pointerEvents = 'none';
+        presetContainer.style.opacity = '0.5';
+
+        // Maybe show message?
+        const msg = document.createElement('div');
+        msg.textContent = "Erweiterung ist für diese Seite deaktiviert.";
+        msg.style.cssText = "text-align: center; color: var(--color-error); font-size: 13px; margin-top: 10px;";
+        document.querySelector('.speed-display-section').appendChild(msg);
+    }
+
+    let isDragging = false;
+
     // Event Listeners
+    speedSlider.addEventListener('mousedown', () => { isDragging = true; });
+    speedSlider.addEventListener('mouseup', () => { isDragging = false; });
+    // Also handle case where mouse leaves window while dragging?
+    speedSlider.addEventListener('mouseleave', () => { isDragging = false; });
+
     speedSlider.addEventListener('input', (e) => {
         const val = parseFloat(e.target.value);
         setSpeed(val, false); // Don't reload slider if dragging
     });
+    // Ensure isDragging is cleared on change (final commit)
+    speedSlider.addEventListener('change', () => { isDragging = false; });
 
     if (openOptions) {
         openOptions.addEventListener('click', () => {
             chrome.runtime.openOptionsPage();
         });
     }
+
+    // Keyboard Shortcuts inside Popup
+    document.addEventListener('keydown', (e) => {
+        // Ignore if focus is in an input (unlikely in this popup layout but good practice)
+        if (e.target.matches('input') && e.target.type === 'text') return;
+
+        const key = e.key;
+        let action = null;
+
+        if (key === '+' || key === 'NumpadAdd' || key === 'Add' || (key === '=' && e.shiftKey)) {
+            action = 'faster';
+        } else if (key === '-' || key === 'NumpadSubtract' || key === 'Subtract') {
+            action = 'slower';
+        } else if (['1', '2', '3', '4'].includes(key)) {
+            action = 'preset' + key;
+        }
+
+        if (action) {
+            e.preventDefault();
+            let currentSpeed = parseFloat(speedSlider.value);
+
+            if (action === 'faster') {
+                setSpeed(currentSpeed + 0.25);
+            } else if (action === 'slower') {
+                setSpeed(currentSpeed - 0.25);
+            } else if (action.startsWith('preset')) {
+                const index = parseInt(action.replace('preset', '')) - 1;
+                const cards = document.querySelectorAll('.preset-card');
+                if (cards[index]) {
+                    cards[index].click();
+                }
+            }
+        }
+    });
 
     function setSpeed(speed, updateSlider = true) {
         // Bounds
@@ -71,8 +176,17 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Listen for updates from content script
+    chrome.runtime.onMessage.addListener((request) => {
+        if (request.action === "speedUpdate" && request.speed) {
+            updateUI(request.speed);
+        }
+    });
+
     function updateUI(speed) {
-        speedSlider.value = speed;
+        if (!isDragging) {
+            speedSlider.value = speed;
+        }
         updateDisplayOnly(speed);
         highlightPreset(speed);
     }
