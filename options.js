@@ -44,6 +44,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Opens the same ExtPay page, which shows subscription management for paid users
         chrome.runtime.sendMessage({ action: 'openUpgradePage' });
     });
+    
+    // Listen for theme changes from popup
+    chrome.runtime.onMessage.addListener((request) => {
+        if (request.action === 'themeChanged') {
+            if (request.darkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        }
+    });
 });
 
 function updateLicenseUI() {

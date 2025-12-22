@@ -50,13 +50,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         chrome.runtime.sendMessage({ action: 'openUpgradePage' });
     });
 
+    // Theme toggle button
+    const themeToggle = document.getElementById('themeToggle');
+
     // Load Settings & Presets
     chrome.storage.sync.get(['presets', 'presetNames', 'darkMode', 'autoSkip'], (data) => {
         // Apply Dark Mode
         if (data.darkMode) {
             document.body.classList.add('dark-mode');
-            const dmToggle = document.getElementById('toggleDarkMode');
-            if (dmToggle) dmToggle.checked = true;
         }
 
         // Initialize Toggles
@@ -67,12 +68,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (recapToggle) recapToggle.checked = data.autoSkip?.recapEnabled || false;
 
         // Bind Toggle Listeners
-        // Dark Mode
-        document.getElementById('toggleDarkMode')?.addEventListener('change', (e) => {
-            const isDark = e.target.checked;
-            if (isDark) document.body.classList.add('dark-mode');
-            else document.body.classList.remove('dark-mode');
+        // Theme Toggle (Moon/Sun icon)
+        themeToggle?.addEventListener('click', () => {
+            const isDark = document.body.classList.toggle('dark-mode');
             chrome.storage.sync.set({ darkMode: isDark });
+            // Notify other extension pages (options page) about the theme change
+            chrome.runtime.sendMessage({ action: 'themeChanged', darkMode: isDark });
         });
 
         // Intro
