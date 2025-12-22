@@ -122,6 +122,9 @@ const SKIP_BUTTON_SELECTORS = {
 
 
 
+// List of officially supported streaming platforms for auto-skip
+const SUPPORTED_STREAMING_PLATFORMS = ['netflix', 'disney', 'amazon', 'youtube', 'crunchyroll', 'hbo', 'appletv', 'paramount', 'peacock'];
+
 function getPlatform(hostname) {
     if (hostname.includes('netflix.com')) return 'netflix';
     if (hostname.includes('disneyplus.com') || hostname.includes('disney+')) return 'disney';
@@ -133,6 +136,12 @@ function getPlatform(hostname) {
     if (hostname.includes('paramountplus.com')) return 'paramount';
     if (hostname.includes('peacocktv.com')) return 'peacock';
     return 'generic';
+}
+
+// Check if current site is a supported streaming platform
+function isSupportedStreamingPlatform() {
+    const platform = getPlatform(window.location.hostname);
+    return SUPPORTED_STREAMING_PLATFORMS.includes(platform);
 }
 
 // Initialize
@@ -518,6 +527,14 @@ class IntroSkipper {
         // If neither is enabled, do nothing
         if (!this.enabled && !this.skipRecapEnabled) return;
 
+        // Only run auto-skip on supported streaming platforms
+        if (!isSupportedStreamingPlatform()) {
+            if (settings.autoSkip?.debugMode) {
+                console.log('[Video Speed Controller+] Auto-Skip disabled: Not a supported streaming platform');
+            }
+            return;
+        }
+
         this.startWatching();
     }
 
@@ -556,10 +573,15 @@ class IntroSkipper {
         }
 
         const platform = getPlatform(window.location.hostname);
-        const selectors = [
-            ...(SKIP_BUTTON_SELECTORS[platform] || []),
-            ...SKIP_BUTTON_SELECTORS.generic
-        ];
+
+        // Only use platform-specific selectors, no generic selectors
+        // This prevents false positives on non-streaming sites
+        const selectors = SKIP_BUTTON_SELECTORS[platform] || [];
+
+        // If no selectors for this platform, don't try to skip anything
+        if (selectors.length === 0) {
+            return;
+        }
 
         for (const selector of selectors) {
             // Versuche Button zu finden
