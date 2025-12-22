@@ -69,6 +69,62 @@ body {
   margin-bottom: 32px;
   padding-bottom: 16px;
   border-bottom: 1px solid var(--color-border);
+  position: relative;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-toggle:hover {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transform: translateY(-50%) scale(1.05);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-toggle:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+/* Icon visibility based on theme */
+.theme-toggle .icon-sun {
+  display: none;
+}
+
+.theme-toggle .icon-moon {
+  display: block;
+}
+
+body.dark-mode .theme-toggle .icon-sun {
+  display: block;
+}
+
+body.dark-mode .theme-toggle .icon-moon {
+  display: none;
+}
+
+body.dark-mode .theme-toggle {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+body.dark-mode .theme-toggle:hover {
+  background: #38383c;
 }
 
 .back-button {

@@ -45,6 +45,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         chrome.runtime.sendMessage({ action: 'openUpgradePage' });
     });
     
+    // Theme toggle button
+    const themeToggle = document.getElementById('themeToggle');
+    themeToggle?.addEventListener('click', () => {
+        const isDark = document.body.classList.toggle('dark-mode');
+        chrome.storage.sync.set({ darkMode: isDark });
+        // Notify other extension pages (popup) about the theme change
+        chrome.runtime.sendMessage({ action: 'themeChanged', darkMode: isDark });
+    });
+    
     // Listen for theme changes from popup
     chrome.runtime.onMessage.addListener((request) => {
         if (request.action === 'themeChanged') {

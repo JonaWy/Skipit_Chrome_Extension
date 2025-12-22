@@ -229,10 +229,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // Listen for updates from content script
+    // Listen for updates from content script and theme changes
     chrome.runtime.onMessage.addListener((request) => {
         if (request.action === "speedUpdate" && request.speed) {
             updateUI(request.speed);
+        }
+        // Listen for theme changes from options page
+        if (request.action === 'themeChanged') {
+            if (request.darkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
         }
     });
 
