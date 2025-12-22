@@ -2,9 +2,18 @@ let settings = {};
 const videos = new WeakSet();
 let osdElement = null;
 let osdTimeout = null;
-let silenceAudioCtx = null;
-let silenceAnalyser = null;
 let introSkipper = null;
+
+// Cached values for performance (Point 7: Cache getPlatform result)
+let cachedPlatform = null;
+let cachedHostname = null;
+
+// Cache for isVideoPlaybackPage (Point 3)
+let isPlaybackPageCache = null;
+let lastPlaybackCheckUrl = null;
+
+// Debounce timer for savePerSiteSpeed (Point 6 bonus)
+let saveSpeedTimeout = null;
 
 const SKIP_BUTTON_SELECTORS = {
   // Netflix
@@ -185,25 +194,34 @@ const SUPPORTED_STREAMING_PLATFORMS = [
   "peacock",
 ];
 
+// Point 7: Cached getPlatform() - only recalculates when hostname changes
 function getPlatform(hostname) {
-  if (hostname.includes("netflix.com")) return "netflix";
-  if (hostname.includes("disneyplus.com") || hostname.includes("disney+"))
-    return "disney";
-  // Support all Amazon regional domains (amazon.de, amazon.co.uk, etc.)
-  if (hostname.includes("amazon.") || hostname.includes("primevideo."))
-    return "amazon";
-  if (hostname.includes("youtube.com")) return "youtube";
-  if (
+  // Return cached value if hostname hasn't changed
+  if (cachedHostname === hostname && cachedPlatform !== null) {
+    return cachedPlatform;
+  }
+
+  cachedHostname = hostname;
+
+  if (hostname.includes("netflix.com")) cachedPlatform = "netflix";
+  else if (hostname.includes("disneyplus.com") || hostname.includes("disney+"))
+    cachedPlatform = "disney";
+  else if (hostname.includes("amazon.") || hostname.includes("primevideo."))
+    cachedPlatform = "amazon";
+  else if (hostname.includes("youtube.com")) cachedPlatform = "youtube";
+  else if (
     hostname.includes("crunchyroll.com") ||
     hostname.includes("static.crunchyroll.com")
   )
-    return "crunchyroll";
-  if (hostname.includes("hbo.com") || hostname.includes("hbomax.com"))
-    return "hbo";
-  if (hostname.includes("tv.apple.com")) return "appletv";
-  if (hostname.includes("paramountplus.com")) return "paramount";
-  if (hostname.includes("peacocktv.com")) return "peacock";
-  return "generic";
+    cachedPlatform = "crunchyroll";
+  else if (hostname.includes("hbo.com") || hostname.includes("hbomax.com"))
+    cachedPlatform = "hbo";
+  else if (hostname.includes("tv.apple.com")) cachedPlatform = "appletv";
+  else if (hostname.includes("paramountplus.com")) cachedPlatform = "paramount";
+  else if (hostname.includes("peacocktv.com")) cachedPlatform = "peacock";
+  else cachedPlatform = "generic";
+
+  return cachedPlatform;
 }
 
 // Check if current site is a supported streaming platform
@@ -495,8 +513,11 @@ function savePerSiteSpeed(speed) {
 
   settings.perSiteSettings[host].speed = speed;
 
-  // Debounce save?
-  chrome.storage.sync.set({ perSiteSettings: settings.perSiteSettings });
+  // Debounce save to avoid excessive storage writes
+  if (saveSpeedTimeout) clearTimeout(saveSpeedTimeout);
+  saveSpeedTimeout = setTimeout(() => {
+    chrome.storage.sync.set({ perSiteSettings: settings.perSiteSettings });
+  }, 1000);
 }
 
 function showOsd(speed) {
@@ -736,60 +757,39 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 class IntroSkipper {
   constructor() {
     this.lastClickTime = 0;
-    this.clickDebounceMs = 5000; // 5 Sekunden zwischen Clicks
-    this.checkInterval = 1000; // Jede Sekunde checken
+    this.clickDebounceMs = 5000; // 5 seconds between clicks
+    this.checkInterval = 1000; // Check every second
     this.observer = null;
     this.intervalId = null;
     this.enabled = false;
     this.skipRecapEnabled = false;
-    this.autoPlayNextEnabled = false;
-    this.clickedButtons = new Set(); // Verhindert doppeltes Klicken
+    // Point 1: Use WeakSet for clicked buttons to avoid memory leaks
+    this.clickedButtonsWeak = new WeakSet();
+    // Fallback: Small map with timestamps for non-referenceable cases
+    this.clickedButtonIds = new Map();
   }
 
-  // Check if we're on a video playback page (not browse/home page)
+  // Point 3: Cached isVideoPlaybackPage() - only recalculates when URL changes or video added
   isVideoPlaybackPage() {
-    const videos = document.querySelectorAll("video");
-    const url = window.location.href.toLowerCase();
+    const currentUrl = window.location.href.toLowerCase();
+
+    // Return cached result if URL hasn't changed
+    if (lastPlaybackCheckUrl === currentUrl && isPlaybackPageCache !== null) {
+      return isPlaybackPageCache;
+    }
+
+    lastPlaybackCheckUrl = currentUrl;
     const platform = getPlatform(window.location.hostname);
 
-    // Debug info
+    // Debug info (only log on actual recalculation)
     if (settings.autoSkip?.debugMode) {
-      console.log("[SkipIt] Checking playback page:", {
-        url: url,
+      console.log("[SkipIt] Checking playback page (cache miss):", {
+        url: currentUrl,
         platform: platform,
-        videoCount: videos.length,
       });
     }
 
-    // Check for video elements
-    for (const video of videos) {
-      const rect = video.getBoundingClientRect();
-
-      if (settings.autoSkip?.debugMode && videos.length > 0) {
-        console.log("[SkipIt] Video found:", {
-          width: rect.width,
-          height: rect.height,
-          readyState: video.readyState,
-          paused: video.paused,
-          duration: video.duration,
-        });
-      }
-
-      // Check if there's a reasonably sized video element
-      // Reduced size requirements to catch more cases
-      if (rect.width > 100 && rect.height > 80) {
-        if (settings.autoSkip?.debugMode) {
-          console.log("[SkipIt] Video size OK, returning true");
-        }
-        return true;
-      }
-    }
-
-    if (settings.autoSkip?.debugMode) {
-      console.log("[SkipIt] No suitable video found, checking URL patterns...");
-    }
-
-    // Also check URL patterns for streaming sites
+    // First, quick URL pattern check (fastest)
     const playbackPatterns = {
       disney: ["/video/", "/play/", "/watch", "/episode", "/movie"],
       netflix: ["/watch/"],
@@ -803,15 +803,29 @@ class IntroSkipper {
 
     const patterns = playbackPatterns[platform] || [];
     for (const pattern of patterns) {
-      if (url.includes(pattern)) {
-        if (settings.autoSkip?.debugMode) {
-          console.log("[SkipIt] URL pattern matched:", pattern);
-        }
+      if (currentUrl.includes(pattern)) {
+        isPlaybackPageCache = true;
         return true;
       }
     }
 
+    // Fallback: Check for video elements
+    const videos = document.querySelectorAll("video");
+    for (const video of videos) {
+      const rect = video.getBoundingClientRect();
+      if (rect.width > 100 && rect.height > 80) {
+        isPlaybackPageCache = true;
+        return true;
+      }
+    }
+
+    isPlaybackPageCache = false;
     return false;
+  }
+
+  // Invalidate cache when video is added (called from MutationObserver)
+  invalidatePlaybackCache() {
+    isPlaybackPageCache = null;
   }
 
   async init() {
@@ -860,10 +874,23 @@ class IntroSkipper {
       }
     }, settings.autoSkip?.buttonCheckInterval || this.checkInterval);
 
-    // MutationObserver: Auf neue Buttons reagieren (with debounce)
+    // MutationObserver: React to new buttons (with debounce)
     this.mutationTimeout = null;
-    this.observer = new MutationObserver(() => {
+    this.observer = new MutationObserver((mutations) => {
       if (this.enabled || this.skipRecapEnabled) {
+        // Check if any video elements were added - invalidate cache
+        for (const mutation of mutations) {
+          for (const node of mutation.addedNodes) {
+            if (
+              node.nodeName === "VIDEO" ||
+              (node.querySelector && node.querySelector("video"))
+            ) {
+              this.invalidatePlaybackCache();
+              break;
+            }
+          }
+        }
+
         // Debounce mutation observer to prevent excessive calls
         if (this.mutationTimeout) clearTimeout(this.mutationTimeout);
         this.mutationTimeout = setTimeout(() => {
@@ -904,13 +931,7 @@ class IntroSkipper {
     // Only search for skip buttons on video playback pages
     // This prevents false positives on main pages, browse pages, etc.
     const isPlaybackPage = this.isVideoPlaybackPage();
-    if (settings.autoSkip?.debugMode) {
-      console.log("[SkipIt] isPlaybackPage result:", isPlaybackPage);
-    }
     if (!isPlaybackPage) {
-      if (settings.autoSkip?.debugMode) {
-        console.log("[SkipIt] Not a playback page, skipping check");
-      }
       return;
     }
 
@@ -1084,75 +1105,52 @@ class IntroSkipper {
     return null;
   }
 
-  // Additional function to find any skip button on the page (language-agnostic)
+  // Point 2: Optimized findAnySkipButton() with more specific selectors
   findAnySkipButton() {
+    // Ordered by specificity - most likely selectors first for early exit
     const skipKeywords = [
-      // English
       "skip",
-      "skip intro",
-      "skip recap",
-      "skip credits",
-      "skip opening",
-      // German
       "überspringen",
-      "intro überspringen",
-      "vorspann überspringen",
-      "rückblick überspringen",
-      "zusammenfassung überspringen",
-      "abspann überspringen",
-      // French
       "passer",
-      "ignorer",
-      // Spanish
       "saltar",
-      "omitir",
-      // Italian
       "salta",
-      "passa",
-      // Portuguese
       "pular",
-      // Dutch
       "overslaan",
     ];
 
-    // Search all interactive elements
-    const allElements = document.querySelectorAll(
-      'button, a, div[tabindex], span[tabindex], [role="button"], [class*="skip"], [class*="Skip"], [class*="button"], [class*="Button"]'
+    // More specific selector - targets only likely skip button elements
+    // Avoids broad selectors like [class*="button"] that match too many elements
+    const elements = document.querySelectorAll(
+      '[class*="skip" i], [class*="Skip"], [data-testid*="skip" i], [aria-label*="skip" i], [aria-label*="überspringen" i], button[class*="skip" i]'
     );
 
-    for (const element of allElements) {
-      const elementText = element.textContent.trim().toLowerCase();
-      const ariaLabel = (
-        element.getAttribute("aria-label") || ""
-      ).toLowerCase();
-      const title = (element.getAttribute("title") || "").toLowerCase();
-      // Handle SVG elements where className is an object
-      let className = "";
-      if (typeof element.className === "string") {
-        className = element.className.toLowerCase();
-      } else if (element.className?.baseVal) {
-        className = element.className.baseVal.toLowerCase();
+    // Fast path: Check specific skip-related elements first
+    for (const element of elements) {
+      if (this.isButtonVisible(element)) {
+        return element;
       }
-      const dataTestId = (
-        element.getAttribute("data-testid") || ""
-      ).toLowerCase();
+    }
 
-      // Check if any skip keyword matches
-      for (const keyword of skipKeywords) {
-        if (
-          elementText.includes(keyword) ||
-          ariaLabel.includes(keyword) ||
-          title.includes(keyword) ||
-          className.includes(keyword.replace(" ", "")) ||
-          dataTestId.includes(keyword.replace(" ", ""))
-        ) {
-          // Make sure it's visible
-          if (this.isButtonVisible(element)) {
-            return element;
-          }
+    // Slower fallback: Search buttons by text content
+    const buttons = document.querySelectorAll(
+      'button, [role="button"], div[tabindex="0"]'
+    );
+
+    for (const element of buttons) {
+      // Quick visibility check first (avoid expensive text operations on hidden elements)
+      const rect = element.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) continue;
+
+      const elementText = element.textContent.trim().toLowerCase();
+
+      // Check against keywords (using some() for early exit)
+      if (skipKeywords.some((kw) => elementText.includes(kw))) {
+        if (this.isButtonVisible(element)) {
+          return element;
         }
       }
     }
+
     return null;
   }
 
@@ -1170,24 +1168,46 @@ class IntroSkipper {
     );
   }
 
+  // Point 1: Optimized click tracking using WeakSet (no memory leak)
   wasClicked(button) {
-    // Erstelle eindeutige ID für Button - not perfect but okay for DOM elements
-    // Using outerHTML might be too large/variable. Using reference + time?
-    // The Set stores strings, so outerHTML is used.
-    // Ideally we shouldn't store large strings.
-    // But since pages reload/change, simple check.
-    const buttonId = button.outerHTML;
-    return this.clickedButtons.has(buttonId);
+    // Primary check: WeakSet (fast, no memory leak)
+    if (this.clickedButtonsWeak.has(button)) {
+      return true;
+    }
+    // Fallback: Check by short ID (for edge cases where element is recreated)
+    const shortId = this.getButtonShortId(button);
+    return this.clickedButtonIds.has(shortId);
   }
 
   markAsClicked(button) {
-    const buttonId = button.outerHTML;
-    this.clickedButtons.add(buttonId);
+    // Add to WeakSet (primary, memory-efficient)
+    this.clickedButtonsWeak.add(button);
 
-    // Nach 30 Sekunden aus Set entfernen (falls Button erneut erscheint? usually not for same intro)
+    // Also add short ID with timestamp (fallback, for recreated elements)
+    const shortId = this.getButtonShortId(button);
+    this.clickedButtonIds.set(shortId, Date.now());
+
+    // Clean up old entries after 30 seconds
     setTimeout(() => {
-      this.clickedButtons.delete(buttonId);
+      this.clickedButtonIds.delete(shortId);
     }, 30000);
+
+    // Limit map size to prevent memory growth
+    if (this.clickedButtonIds.size > 50) {
+      const oldestKey = this.clickedButtonIds.keys().next().value;
+      this.clickedButtonIds.delete(oldestKey);
+    }
+  }
+
+  // Generate a short, stable ID for a button (much smaller than outerHTML)
+  getButtonShortId(button) {
+    const tag = button.tagName || "EL";
+    const text = (button.textContent || "").trim().substring(0, 20);
+    const cls = (
+      typeof button.className === "string" ? button.className : ""
+    ).substring(0, 30);
+    const testId = button.getAttribute("data-testid") || "";
+    return `${tag}:${text}:${cls}:${testId}`;
   }
 
   clickButton(button, selector, type) {
@@ -1275,38 +1295,29 @@ class IntroSkipper {
     }
   }
 
-  // Get all potential click targets (element, children, parents)
+  // Point 12: Simplified getClickTargets - only element + first interactive child
   getClickTargets(element) {
-    const targets = new Set();
+    const targets = [element];
 
-    // Add the element itself
-    targets.add(element);
-
-    // Add clickable child elements (buttons, spans, divs - but NOT links that could navigate)
-    const children = element.querySelectorAll(
-      'button, [role="button"], [tabindex], span, div'
-    );
-    children.forEach((child) => {
-      // Skip elements that could cause navigation
-      if (!this.couldCauseNavigation(child)) {
-        targets.add(child);
-      }
-    });
-
-    // Add parent elements up to 2 levels (reduced from 3 to be safer)
-    let parent = element.parentElement;
-    for (let i = 0; i < 2 && parent; i++) {
-      if (
-        parent.tagName !== "BODY" &&
-        parent.tagName !== "HTML" &&
-        !this.couldCauseNavigation(parent)
-      ) {
-        targets.add(parent);
-      }
-      parent = parent.parentElement;
+    // Only add the first interactive child if present (avoid iterating all children)
+    const firstChild = element.querySelector('button, [role="button"]');
+    if (firstChild && !this.couldCauseNavigation(firstChild)) {
+      targets.push(firstChild);
     }
 
-    return Array.from(targets);
+    // Only add immediate parent if it looks like a button wrapper
+    const parent = element.parentElement;
+    if (
+      parent &&
+      parent.tagName !== "BODY" &&
+      parent.tagName !== "HTML" &&
+      (parent.getAttribute("role") === "button" ||
+        parent.hasAttribute("tabindex"))
+    ) {
+      targets.push(parent);
+    }
+
+    return targets;
   }
 
   // Check if clicking an element could cause page navigation
@@ -1340,7 +1351,7 @@ class IntroSkipper {
     }
   }
 
-  // Perform comprehensive click on a single element
+  // Point 4: Optimized performClick with minimal necessary events
   performClick(element) {
     const rect = element.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
@@ -1359,12 +1370,10 @@ class IntroSkipper {
     };
 
     try {
-      // Focus the element
+      // Focus first
       if (element.focus) element.focus();
 
-      // Pointer events (for React)
-      element.dispatchEvent(new PointerEvent("pointerover", eventOptions));
-      element.dispatchEvent(new PointerEvent("pointerenter", eventOptions));
+      // Essential pointer events only (for React/Vue)
       element.dispatchEvent(
         new PointerEvent("pointerdown", { ...eventOptions, isPrimary: true })
       );
@@ -1372,65 +1381,13 @@ class IntroSkipper {
         new PointerEvent("pointerup", { ...eventOptions, isPrimary: true })
       );
 
-      // Mouse events
-      element.dispatchEvent(new MouseEvent("mouseover", eventOptions));
-      element.dispatchEvent(new MouseEvent("mouseenter", eventOptions));
-      element.dispatchEvent(new MouseEvent("mousedown", eventOptions));
-      element.dispatchEvent(new MouseEvent("mouseup", eventOptions));
+      // Essential mouse events only
       element.dispatchEvent(new MouseEvent("click", eventOptions));
 
-      // Touch events (for hybrid/mobile-optimized sites)
-      try {
-        const touch = new Touch({
-          identifier: Date.now(),
-          target: element,
-          clientX: x,
-          clientY: y,
-          screenX: x + window.screenX,
-          screenY: y + window.screenY,
-        });
-        element.dispatchEvent(
-          new TouchEvent("touchstart", {
-            bubbles: true,
-            cancelable: true,
-            touches: [touch],
-            targetTouches: [touch],
-          })
-        );
-        element.dispatchEvent(
-          new TouchEvent("touchend", {
-            bubbles: true,
-            cancelable: true,
-            touches: [],
-            targetTouches: [],
-          })
-        );
-      } catch (e) {
-        // Touch events not supported in this context
-      }
-
-      // Keyboard activation (Enter/Space)
-      element.dispatchEvent(
-        new KeyboardEvent("keydown", {
-          bubbles: true,
-          cancelable: true,
-          key: "Enter",
-          code: "Enter",
-        })
-      );
-      element.dispatchEvent(
-        new KeyboardEvent("keyup", {
-          bubbles: true,
-          cancelable: true,
-          key: "Enter",
-          code: "Enter",
-        })
-      );
-
-      // Native click
+      // Native click as final fallback
       if (element.click) element.click();
     } catch (e) {
-      // Ignore errors for individual elements
+      // Ignore errors
     }
   }
 
