@@ -185,6 +185,7 @@ function loadSettings() {
         if (settings.stats) {
             document.getElementById('statIntros').textContent = settings.stats.introsSkipped || 0;
             document.getElementById('statRecaps').textContent = settings.stats.recapsSkipped || 0;
+            document.getElementById('statTimeSaved').textContent = formatTimeSaved(settings.stats.totalTimeSaved || 0);
         }
 
         // OSD
@@ -276,6 +277,19 @@ function resetSettings() {
             // Background will re-init or we can manually invoke
             chrome.runtime.reload(); // Simple way
         });
+    }
+}
+
+function formatTimeSaved(seconds) {
+    if (seconds < 60) {
+        return `${seconds}s`;
+    } else if (seconds < 3600) {
+        const mins = Math.floor(seconds / 60);
+        return `${mins}m`;
+    } else {
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
     }
 }
 

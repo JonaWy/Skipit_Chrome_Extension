@@ -245,9 +245,12 @@ select:focus {
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  /* Only 2 stats now: Intros, Recaps */
   gap: 16px;
   margin-bottom: 20px;
+}
+
+.stats-grid.stats-grid-3 {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .stat-item {

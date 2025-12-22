@@ -848,12 +848,20 @@ class IntroSkipper {
     }
 
     updateStats(type) {
-        // Basic stats tracking
+        // Average time saved per skip (in seconds)
+        const AVG_INTRO_SECONDS = 30;
+        const AVG_RECAP_SECONDS = 45;
+        
         chrome.storage.sync.get('stats', (data) => {
-            const stats = data.stats || { introsSkipped: 0, recapsSkipped: 0 };
+            const stats = data.stats || { introsSkipped: 0, recapsSkipped: 0, totalTimeSaved: 0 };
 
-            if (type === 'Intro') stats.introsSkipped = (stats.introsSkipped || 0) + 1;
-            else if (type === 'Recap') stats.recapsSkipped = (stats.recapsSkipped || 0) + 1;
+            if (type === 'Intro') {
+                stats.introsSkipped = (stats.introsSkipped || 0) + 1;
+                stats.totalTimeSaved = (stats.totalTimeSaved || 0) + AVG_INTRO_SECONDS;
+            } else if (type === 'Recap') {
+                stats.recapsSkipped = (stats.recapsSkipped || 0) + 1;
+                stats.totalTimeSaved = (stats.totalTimeSaved || 0) + AVG_RECAP_SECONDS;
+            }
 
             chrome.storage.sync.set({ stats });
         });
