@@ -66,6 +66,18 @@
         <button id="upgradeBtn" class="upgrade-btn">Upgrade</button>
       </div>
 
+      <!-- Streak Display -->
+      <div id="streakDisplay" class="streak-display" style="display: none">
+        <div class="streak-info">
+          <span class="streak-icon">🔥</span>
+          <div class="streak-details">
+            <span class="streak-label">Day Streak</span>
+            <span class="streak-value" id="streakValue">0</span>
+          </div>
+        </div>
+        <div id="streakBadges" class="streak-badges"></div>
+      </div>
+
       <section class="speed-display-section">
         <span id="speedValue">1.00x</span>
       </section>
@@ -104,12 +116,44 @@
           <input type="checkbox" id="toggleRecap" class="toggle-checkbox" />
           <span class="toggle-switch"></span>
         </label>
+        <label class="toggle-container">
+          <span class="toggle-label">Skip Ads <span class="premium-feature-tag" style="display: none" id="skipAdsPremiumTag">PRO</span></span>
+          <input type="checkbox" id="toggleSkipAds" class="toggle-checkbox" />
+          <span class="toggle-switch"></span>
+        </label>
       </section>
 
       <button id="openOptions" class="footer-link">
         <span style="font-size: 13px; font-weight: 500">Settings</span>
       </button>
     </div>
+
+    <!-- Onboarding Overlay -->
+    <div id="onboardingOverlay" class="onboarding-overlay" style="display: none;">
+      <div class="onboarding-content">
+        <div class="onboarding-header">
+          <h2>Welcome to SkipIt! 🎉</h2>
+          <button id="skipOnboarding" class="onboarding-skip">Skip</button>
+        </div>
+        <div id="onboardingSteps" class="onboarding-steps">
+          <!-- Steps will be filled by JS -->
+        </div>
+        <div class="onboarding-footer">
+          <button id="onboardingPrev" class="secondary-button" style="display: none;">Previous</button>
+          <div class="onboarding-dots"></div>
+          <button id="onboardingNext" class="primary-button">Next</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Tips -->
+    <div id="quickTips" class="quick-tips" style="display: none;">
+      <div class="quick-tip-content">
+        <span id="quickTipText"></span>
+        <button id="dismissTip" class="quick-tip-dismiss">×</button>
+      </div>
+    </div>
+
     <script src="license.js"></script>
     <script src="popup.js"></script>
   </body>

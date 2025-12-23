@@ -103,7 +103,7 @@
       <!-- Stats Card -->
       <div class="settings-card">
         <h2 class="card-title">Statistics</h2>
-        <div class="stats-grid stats-grid-3">
+        <div class="stats-grid stats-grid-4">
           <div class="stat-item">
             <span class="stat-value" id="statIntros">0</span>
             <span class="stat-label">Intros</span>
@@ -111,6 +111,10 @@
           <div class="stat-item">
             <span class="stat-value" id="statRecaps">0</span>
             <span class="stat-label">Recaps</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" id="statAds">0</span>
+            <span class="stat-label">Ads</span>
           </div>
           <div class="stat-item">
             <span class="stat-value" id="statTimeSaved">0m</span>
@@ -215,9 +219,33 @@
 
             <label class="toggle-container has-helper">
               <div class="toggle-info">
+                <span class="toggle-label"
+                  >Skip Ads
+                  <span
+                    class="premium-feature-tag"
+                    style="display: none"
+                    id="skipAdsPremiumTagOptions"
+                    >PRO</span
+                  ></span
+                >
+                <span class="setting-helper"
+                  >Automatically skip ads on YouTube and other platforms.
+                  Premium feature.</span
+                >
+              </div>
+              <input
+                type="checkbox"
+                id="skipAdsEnabled"
+                class="toggle-checkbox"
+              />
+              <span class="toggle-switch"></span>
+            </label>
+
+            <label class="toggle-container has-helper">
+              <div class="toggle-info">
                 <span class="toggle-label">Show Notifications</span>
                 <span class="setting-helper"
-                  >Display a brief message when intros or recaps are
+                  >Display a brief message when intros, recaps, or ads are
                   skipped.</span
                 >
               </div>
@@ -244,7 +272,15 @@
 
           <!-- OSD Card -->
           <div class="settings-card">
-            <h2 class="card-title">Speed Overlay (OSD)</h2>
+            <h2 class="card-title">
+              Speed Overlay (OSD)
+              <span
+                class="premium-feature-tag"
+                style="display: none"
+                id="osdAdvancedPremiumTag"
+                >PRO</span
+              >
+            </h2>
 
             <label class="toggle-container">
               <span class="toggle-label">Show Overlay</span>
@@ -265,6 +301,121 @@
                 <option value="bottom-left">Bottom Left</option>
               </select>
             </div>
+
+            <div class="setting-item" style="margin-top: 16px">
+              <label
+                class="toggle-label"
+                style="display: block; margin-bottom: 8px"
+                >Font Size
+                <span
+                  class="premium-feature-tag"
+                  style="display: none"
+                  id="osdSizePremiumTag"
+                  >PRO</span
+                ></label
+              >
+              <input
+                type="range"
+                id="osdFontSize"
+                min="12"
+                max="48"
+                step="2"
+                value="20"
+                style="width: 100%"
+              />
+              <span
+                id="osdFontSizeValue"
+                style="font-size: 12px; color: var(--color-text-secondary)"
+                >20px</span
+              >
+            </div>
+
+            <div class="setting-item" style="margin-top: 16px">
+              <label
+                class="toggle-label"
+                style="display: block; margin-bottom: 8px"
+                >Font Family
+                <span
+                  class="premium-feature-tag"
+                  style="display: none"
+                  id="osdFontPremiumTag"
+                  >PRO</span
+                ></label
+              >
+              <select id="osdFontFamily">
+                <option value="system">System Default</option>
+                <option value="monospace">Monospace</option>
+                <option value="sans-serif">Sans Serif</option>
+                <option value="serif">Serif</option>
+              </select>
+            </div>
+
+            <div class="setting-item" style="margin-top: 16px">
+              <label
+                class="toggle-label"
+                style="display: block; margin-bottom: 8px"
+                >Text Color
+                <span
+                  class="premium-feature-tag"
+                  style="display: none"
+                  id="osdColorPremiumTag"
+                  >PRO</span
+                ></label
+              >
+              <input
+                type="color"
+                id="osdTextColor"
+                value="#FFFFFF"
+                style="width: 100%; height: 40px; border-radius: 8px"
+              />
+            </div>
+
+            <div class="setting-item" style="margin-top: 16px">
+              <label
+                class="toggle-label"
+                style="display: block; margin-bottom: 8px"
+                >Background Opacity
+                <span
+                  class="premium-feature-tag"
+                  style="display: none"
+                  id="osdOpacityPremiumTag"
+                  >PRO</span
+                ></label
+              >
+              <input
+                type="range"
+                id="osdOpacity"
+                min="0"
+                max="100"
+                step="5"
+                value="75"
+                style="width: 100%"
+              />
+              <span
+                id="osdOpacityValue"
+                style="font-size: 12px; color: var(--color-text-secondary)"
+                >75%</span
+              >
+            </div>
+
+            <label class="toggle-container has-helper" style="margin-top: 16px">
+              <div class="toggle-info">
+                <span class="toggle-label"
+                  >Show Additional Info
+                  <span
+                    class="premium-feature-tag"
+                    style="display: none"
+                    id="osdInfoPremiumTag"
+                    >PRO</span
+                  ></span
+                >
+                <span class="setting-helper"
+                  >Display time saved and streak in overlay.</span
+                >
+              </div>
+              <input type="checkbox" id="osdShowInfo" class="toggle-checkbox" />
+              <span class="toggle-switch"></span>
+            </label>
           </div>
         </div>
       </div>

@@ -163,22 +163,66 @@ function loadSettings() {
             scContainer.appendChild(row);
         });
 
-        // Presets
+        // Presets - Support up to 8 for Premium
         const pContainer = document.getElementById('presetsContainer');
         pContainer.innerHTML = '';
-        const presets = settings.presets || [1.0, 1.5, 2.0, 2.5];
-        const names = settings.presetNames || ["Normal", "Speed 1.5x", "Speed 2.0x", "Speed 2.5x"];
+        
+        const maxPresets = License.isPremium ? 8 : 4;
+        const defaultPresets = License.isPremium 
+            ? [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 3.0]
+            : [1.0, 1.5, 2.0, 2.5];
+        const defaultNames = License.isPremium
+            ? ["Normal", "1.25x", "1.5x", "1.75x", "2.0x", "2.25x", "2.5x", "3.0x"]
+            : ["Normal", "1.5x", "2.0x", "2.5x"];
 
-        for (let i = 0; i < 4; i++) {
+        const presets = (settings.presets || defaultPresets).slice(0, maxPresets);
+        const names = (settings.presetNames || defaultNames).slice(0, maxPresets);
+
+        // Add info text
+        const infoText = document.createElement('p');
+        infoText.className = 'description';
+        infoText.style.marginBottom = '12px';
+        infoText.textContent = License.isPremium 
+            ? 'Customize up to 8 speed presets' 
+            : 'Free: 4 presets. Upgrade for 8 presets.';
+        pContainer.appendChild(infoText);
+
+        for (let i = 0; i < maxPresets; i++) {
             const row = document.createElement('div');
             row.className = 'form-group';
             row.style.display = 'flex';
             row.style.gap = '10px';
+            row.style.alignItems = 'center';
+            row.style.marginBottom = '8px';
+            
+            const presetValue = presets[i] !== undefined ? presets[i] : defaultPresets[i];
+            const presetName = names[i] !== undefined ? names[i] : defaultNames[i];
+            
             row.innerHTML = `
-                <input type="text" id="pname_${i}" value="${names[i]}" placeholder="Name">
-                <input type="number" id="pval_${i}" value="${presets[i]}" step="0.05" style="width: 80px">
+                <label style="min-width: 60px; font-size: 13px;">Preset ${i + 1}:</label>
+                <input type="text" id="pname_${i}" value="${presetName}" placeholder="Name" style="flex: 1;">
+                <input type="number" id="pval_${i}" value="${presetValue}" step="0.05" min="0.25" max="4.0" style="width: 80px">
             `;
             pContainer.appendChild(row);
+        }
+
+        // Add upgrade prompt for free users
+        if (!License.isPremium && maxPresets < 8) {
+            const upgradePrompt = document.createElement('div');
+            upgradePrompt.className = 'upgrade-prompt';
+            upgradePrompt.style.marginTop = '12px';
+            upgradePrompt.style.padding = '12px';
+            upgradePrompt.style.background = 'var(--color-bg-tertiary)';
+            upgradePrompt.style.borderRadius = '8px';
+            upgradePrompt.innerHTML = `
+                <p style="margin: 0 0 8px 0; font-size: 13px;">Unlock 8 presets with Premium!</p>
+                <button id="upgradePresetsBtn" class="primary-button" style="width: 100%; padding: 8px;">Upgrade Now</button>
+            `;
+            pContainer.appendChild(upgradePrompt);
+            
+            document.getElementById('upgradePresetsBtn')?.addEventListener('click', () => {
+                chrome.runtime.sendMessage({ action: 'openUpgradePage' });
+            });
         }
 
         // Streaming Services
@@ -216,6 +260,17 @@ function loadSettings() {
         });
 
         // Auto Skip Static Inputs
+        const skipAdsEnabled = document.getElementById('skipAdsEnabled');
+        const skipAdsPremiumTag = document.getElementById('skipAdsPremiumTagOptions');
+        if (skipAdsEnabled) {
+            skipAdsEnabled.checked = settings.autoSkip?.skipAdsEnabled || false;
+            if (skipAdsPremiumTag) {
+                skipAdsPremiumTag.style.display = License.isPremium ? 'none' : 'inline-block';
+            }
+            if (!License.isPremium) {
+                skipAdsEnabled.disabled = true;
+            }
+        }
         document.getElementById('showNotifications').checked = settings.autoSkip?.showNotifications !== false; // Default true
         document.getElementById('clickDelay').value = settings.autoSkip?.clickDelay || 500;
         document.getElementById('debugMode').checked = settings.autoSkip?.debugMode || false;
@@ -224,12 +279,73 @@ function loadSettings() {
         if (settings.stats) {
             document.getElementById('statIntros').textContent = settings.stats.introsSkipped || 0;
             document.getElementById('statRecaps').textContent = settings.stats.recapsSkipped || 0;
+            document.getElementById('statAds').textContent = settings.stats.adsSkipped || 0;
             document.getElementById('statTimeSaved').textContent = formatTimeSaved(settings.stats.totalTimeSaved || 0);
         }
 
         // OSD
-        document.getElementById('osdEnabled').checked = settings.osd?.enabled !== false;
-        document.getElementById('osdPosition').value = settings.osd?.position || 'top-right';
+        const osdEnabled = document.getElementById('osdEnabled');
+        const osdPosition = document.getElementById('osdPosition');
+        const osdFontSize = document.getElementById('osdFontSize');
+        const osdFontSizeValue = document.getElementById('osdFontSizeValue');
+        const osdFontFamily = document.getElementById('osdFontFamily');
+        const osdTextColor = document.getElementById('osdTextColor');
+        const osdOpacity = document.getElementById('osdOpacity');
+        const osdOpacityValue = document.getElementById('osdOpacityValue');
+        const osdShowInfo = document.getElementById('osdShowInfo');
+
+        if (osdEnabled) osdEnabled.checked = settings.osd?.enabled !== false;
+        if (osdPosition) osdPosition.value = settings.osd?.position || 'top-right';
+        
+        // Advanced OSD options (Premium)
+        const isPremium = License.isPremium;
+        const premiumTags = ['osdAdvancedPremiumTag', 'osdSizePremiumTag', 'osdFontPremiumTag', 
+                            'osdColorPremiumTag', 'osdOpacityPremiumTag', 'osdInfoPremiumTag'];
+        premiumTags.forEach(tagId => {
+            const tag = document.getElementById(tagId);
+            if (tag) tag.style.display = isPremium ? 'none' : 'inline-block';
+        });
+
+        if (osdFontSize) {
+            osdFontSize.value = settings.osd?.fontSize || 20;
+            osdFontSize.disabled = !isPremium;
+            if (osdFontSizeValue) {
+                osdFontSizeValue.textContent = `${osdFontSize.value}px`;
+            }
+            osdFontSize.addEventListener('input', (e) => {
+                if (osdFontSizeValue) {
+                    osdFontSizeValue.textContent = `${e.target.value}px`;
+                }
+            });
+        }
+
+        if (osdFontFamily) {
+            osdFontFamily.value = settings.osd?.fontFamily || 'system';
+            osdFontFamily.disabled = !isPremium;
+        }
+
+        if (osdTextColor) {
+            osdTextColor.value = settings.osd?.textColor || '#FFFFFF';
+            osdTextColor.disabled = !isPremium;
+        }
+
+        if (osdOpacity) {
+            osdOpacity.value = settings.osd?.opacity !== undefined ? settings.osd.opacity * 100 : 75;
+            osdOpacity.disabled = !isPremium;
+            if (osdOpacityValue) {
+                osdOpacityValue.textContent = `${osdOpacity.value}%`;
+            }
+            osdOpacity.addEventListener('input', (e) => {
+                if (osdOpacityValue) {
+                    osdOpacityValue.textContent = `${e.target.value}%`;
+                }
+            });
+        }
+
+        if (osdShowInfo) {
+            osdShowInfo.checked = settings.osd?.showInfo || false;
+            osdShowInfo.disabled = !isPremium;
+        }
 
         // ATTACH LISTENERS TO EVERYTHING NOW
         document.querySelectorAll('input, select').forEach(el => {
@@ -262,10 +378,21 @@ function saveSettings() {
             newSettings.shortcuts[key] = input.value.toLowerCase();
         });
 
-        // Presets
-        for (let i = 0; i < 4; i++) {
-            newSettings.presetNames.push(document.getElementById(`pname_${i}`).value);
-            newSettings.presets.push(parseFloat(document.getElementById(`pval_${i}`).value));
+        // Presets - Support up to 8 for Premium
+        const maxPresets = License.isPremium ? 8 : 4;
+        newSettings.presetNames = [];
+        newSettings.presets = [];
+        
+        for (let i = 0; i < maxPresets; i++) {
+            const nameInput = document.getElementById(`pname_${i}`);
+            const valInput = document.getElementById(`pval_${i}`);
+            if (nameInput && valInput) {
+                newSettings.presetNames.push(nameInput.value || `Preset ${i + 1}`);
+                const speed = parseFloat(valInput.value) || 1.0;
+                // Clamp speed to allowed range
+                const clampedSpeed = License.clampSpeed(speed);
+                newSettings.presets.push(clampedSpeed);
+            }
         }
 
         // Site Settings
@@ -281,6 +408,9 @@ function saveSettings() {
         newSettings.siteSettings = siteSettings;
 
         // Auto Skip (Merge with existing toggles)
+        const skipAdsCheckbox = document.getElementById('skipAdsEnabled');
+        const skipAdsValue = skipAdsCheckbox && License.isPremium ? skipAdsCheckbox.checked : false;
+        
         newSettings.autoSkip = {
             ...existingAutoSkip, // Preserve introEnabled, recapEnabled
 
@@ -291,15 +421,29 @@ function saveSettings() {
             outroEnabled: false,
             outroButtonClick: true,
             outroSeconds: 15,
+            skipAdsEnabled: skipAdsValue,
             showNotifications: document.getElementById('showNotifications').checked,
             debugMode: document.getElementById('debugMode').checked
         };
 
         // OSD
+        const osdEnabledEl = document.getElementById('osdEnabled');
+        const osdPositionEl = document.getElementById('osdPosition');
+        const osdFontSizeEl = document.getElementById('osdFontSize');
+        const osdFontFamilyEl = document.getElementById('osdFontFamily');
+        const osdTextColorEl = document.getElementById('osdTextColor');
+        const osdOpacityEl = document.getElementById('osdOpacity');
+        const osdShowInfoEl = document.getElementById('osdShowInfo');
+
         newSettings.osd = {
-            enabled: document.getElementById('osdEnabled').checked,
-            position: document.getElementById('osdPosition').value,
-            duration: 2000
+            enabled: osdEnabledEl ? osdEnabledEl.checked : true,
+            position: osdPositionEl ? osdPositionEl.value : 'top-right',
+            duration: 2000,
+            fontSize: License.isPremium && osdFontSizeEl ? parseInt(osdFontSizeEl.value) : 20,
+            fontFamily: License.isPremium && osdFontFamilyEl ? osdFontFamilyEl.value : 'system',
+            textColor: License.isPremium && osdTextColorEl ? osdTextColorEl.value : '#FFFFFF',
+            opacity: License.isPremium && osdOpacityEl ? parseFloat(osdOpacityEl.value) / 100 : 0.75,
+            showInfo: License.isPremium && osdShowInfoEl ? osdShowInfoEl.checked : false
         };
 
         chrome.storage.sync.set(newSettings, () => {
@@ -338,6 +482,7 @@ function resetStats() {
             stats: {
                 introsSkipped: 0,
                 recapsSkipped: 0,
+                adsSkipped: 0,
                 totalTimeSaved: 0
             }
         }, () => {

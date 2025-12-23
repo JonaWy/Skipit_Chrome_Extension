@@ -15,6 +15,24 @@ let lastPlaybackCheckUrl = null;
 // Debounce timer for savePerSiteSpeed (Point 6 bonus)
 let saveSpeedTimeout = null;
 
+// Performance optimizations: Lazy loading and caching
+const featureCache = {
+  osdInitialized: false
+};
+
+// Debounce helper function
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
 const SKIP_BUTTON_SELECTORS = {
   // Netflix
   netflix: [
@@ -100,8 +118,19 @@ const SKIP_BUTTON_SELECTORS = {
     'button:has-text("Überspringen")',
   ],
 
-  // YouTube - Skip Intro/Recap not supported (no such feature on YouTube)
-  // Speed control still works on YouTube
+  // YouTube - Skip Ads support
+  youtube: [
+    // YouTube Skip Ad button selectors
+    '.ytp-ad-skip-button',
+    '.ytp-ad-skip-button-container',
+    'button[class*="skip"]',
+    '[class*="skip-ad"]',
+    '[aria-label*="Skip ad"]',
+    '[aria-label*="Werbung überspringen"]',
+    'button:has-text("Skip ad")',
+    'button:has-text("Skip")',
+    'button:has-text("Werbung überspringen")',
+  ],
 
   // Crunchyroll (Player runs in iframe from static.crunchyroll.com)
   crunchyroll: [
@@ -163,6 +192,11 @@ const SKIP_BUTTON_SELECTORS = {
     'button:has-text("Zusammenfassung überspringen")',
     'button:has-text("Rückblick überspringen")',
     'button:has-text("Abspann überspringen")',
+    // Generic ad skip selectors
+    'button[class*="skip-ad" i]',
+    'button[id*="skip-ad" i]',
+    '[aria-label*="Skip ad" i]',
+    '[aria-label*="Werbung überspringen" i]',
   ],
 };
 
@@ -238,13 +272,22 @@ chrome.storage.sync.get(null, async (items) => {
   if (introSkipper) introSkipper.init();
 });
 
-chrome.storage.onChanged.addListener((changes) => {
+// Debounced storage change handler for better performance
+const debouncedStorageChange = debounce((changes) => {
   for (let key in changes) {
     settings[key] = changes[key].newValue;
   }
   if (changes.autoSkip && introSkipper) {
     introSkipper.init(); // Re-init to pick up changes
   }
+  // Reset feature cache when settings change
+  if (changes.osd) {
+    featureCache.osdInitialized = false;
+  }
+}, 100);
+
+chrome.storage.onChanged.addListener((changes) => {
+  debouncedStorageChange(changes);
 });
 
 function initialize() {
@@ -377,11 +420,15 @@ function handleKeydown(e) {
 
   let action = null;
 
-  // Check for presets (1-4)
+  // Check for presets (1-8)
   if (key === "1") action = "preset1";
   else if (key === "2") action = "preset2";
   else if (key === "3") action = "preset3";
   else if (key === "4") action = "preset4";
+  else if (key === "5") action = "preset5";
+  else if (key === "6") action = "preset6";
+  else if (key === "7") action = "preset7";
+  else if (key === "8") action = "preset8";
   // Check for speed control
   else if (
     key === "+" ||
@@ -486,6 +533,11 @@ function setSpeed(video, speed) {
   }
 }
 
+// Debounced save function for better performance
+const debouncedSavePerSiteSpeed = debounce((perSiteSettings) => {
+  chrome.storage.sync.set({ perSiteSettings });
+}, 1000);
+
 function savePerSiteSpeed(speed) {
   const host = window.location.hostname;
   if (!settings.perSiteSettings) settings.perSiteSettings = {};
@@ -493,11 +545,8 @@ function savePerSiteSpeed(speed) {
 
   settings.perSiteSettings[host].speed = speed;
 
-  // Debounce save to avoid excessive storage writes
-  if (saveSpeedTimeout) clearTimeout(saveSpeedTimeout);
-  saveSpeedTimeout = setTimeout(() => {
-    chrome.storage.sync.set({ perSiteSettings: settings.perSiteSettings });
-  }, 1000);
+  // Use debounced save to avoid excessive storage writes
+  debouncedSavePerSiteSpeed(settings.perSiteSettings);
 }
 
 function showOsd(speed) {
@@ -509,7 +558,55 @@ function showOsd(speed) {
     document.body.appendChild(osdElement);
   }
 
-  osdElement.textContent = speed.toFixed(2) + "x";
+  // Build OSD content
+  let osdContent = speed.toFixed(2) + "x";
+  
+  // Add additional info if enabled (Premium feature)
+  if (settings.osd.showInfo && License.isPremium) {
+    chrome.storage.sync.get(['stats', 'streaks'], (data) => {
+      const stats = data.stats || {};
+      const streaks = data.streaks || {};
+      const timeSaved = formatTimeSaved(stats.totalTimeSaved || 0);
+      const streak = streaks.current || 0;
+      
+      osdElement.innerHTML = `
+        <div style="font-size: ${settings.osd.fontSize || 20}px; line-height: 1.2;">
+          <div>${speed.toFixed(2)}x</div>
+          ${timeSaved ? `<div style="font-size: ${(settings.osd.fontSize || 20) * 0.7}px; opacity: 0.8; margin-top: 4px;">${timeSaved} saved</div>` : ''}
+          ${streak > 0 ? `<div style="font-size: ${(settings.osd.fontSize || 20) * 0.7}px; opacity: 0.8; margin-top: 2px;">🔥 ${streak} days</div>` : ''}
+        </div>
+      `;
+    });
+  } else {
+    osdElement.textContent = osdContent;
+  }
+
+  // Apply custom styling (Premium features)
+  if (License.isPremium) {
+    if (settings.osd.fontSize) {
+      osdElement.style.fontSize = settings.osd.fontSize + "px";
+    }
+    
+    if (settings.osd.fontFamily) {
+      const fontMap = {
+        'system': '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif',
+        'monospace': 'Monaco, "Courier New", monospace',
+        'sans-serif': 'Arial, Helvetica, sans-serif',
+        'serif': 'Georgia, "Times New Roman", serif'
+      };
+      osdElement.style.fontFamily = fontMap[settings.osd.fontFamily] || fontMap.system;
+    }
+    
+    if (settings.osd.textColor) {
+      osdElement.style.color = settings.osd.textColor;
+    }
+    
+    if (settings.osd.opacity !== undefined) {
+      const bgOpacity = settings.osd.opacity;
+      osdElement.style.background = `rgba(0, 0, 0, ${bgOpacity})`;
+    }
+  }
+
   osdElement.classList.remove("vsc-osd-hidden");
 
   // Positioning
@@ -523,12 +620,36 @@ function showOsd(speed) {
     osdElement.style.left = "20px";
     osdElement.style.right = "auto";
     osdElement.style.bottom = "auto";
-  } // ... other positions
+  } else if (settings.osd.position === "bottom-right") {
+    osdElement.style.bottom = "20px";
+    osdElement.style.right = "20px";
+    osdElement.style.top = "auto";
+    osdElement.style.left = "auto";
+  } else if (settings.osd.position === "bottom-left") {
+    osdElement.style.bottom = "20px";
+    osdElement.style.left = "20px";
+    osdElement.style.top = "auto";
+    osdElement.style.right = "auto";
+  }
 
   if (osdTimeout) clearTimeout(osdTimeout);
   osdTimeout = setTimeout(() => {
     osdElement.classList.add("vsc-osd-hidden");
   }, settings.osd.duration || 2000);
+}
+
+// Helper function to format time saved
+function formatTimeSaved(seconds) {
+  if (seconds < 60) {
+    return `${seconds}s`;
+  } else if (seconds < 3600) {
+    const mins = Math.floor(seconds / 60);
+    return `${mins}m`;
+  } else {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    return mins > 0 ? `${hours}h ${mins}m` : `${hours}h`;
+  }
 }
 
 function toggleOsd() {
@@ -810,15 +931,32 @@ class IntroSkipper {
       (settings.autoSkip && settings.autoSkip.introEnabled) || false;
     this.skipRecapEnabled =
       (settings.autoSkip && settings.autoSkip.recapEnabled) || false;
+    this.skipAdsEnabled =
+      (settings.autoSkip && settings.autoSkip.skipAdsEnabled) || false;
 
     // Stop if previously running
     this.stop();
 
-    // If neither is enabled, do nothing
-    if (!this.enabled && !this.skipRecapEnabled) return;
+    // If none are enabled, do nothing
+    if (!this.enabled && !this.skipRecapEnabled && !this.skipAdsEnabled) return;
 
-    // Only run auto-skip on supported streaming platforms
-    if (!isSupportedStreamingPlatform()) {
+    const platform = getPlatform(window.location.hostname);
+    
+    // For ad skipping, check if it's YouTube or generic platform
+    if (this.skipAdsEnabled && (platform === "youtube" || platform === "generic")) {
+      // Check license: Ad skipping is Premium feature
+      if (!License.isPremium) {
+        if (settings.autoSkip?.debugMode) {
+          console.log("[SkipIt] Skip Ads requires Premium");
+        }
+        return;
+      }
+      this.startWatching();
+      return;
+    }
+
+    // Only run auto-skip on supported streaming platforms for intro/recap
+    if (!isSupportedStreamingPlatform() && platform !== "youtube") {
       if (settings.autoSkip?.debugMode) {
         console.log(
           "[SkipIt] Auto-Skip disabled: Not a supported streaming platform"
@@ -828,7 +966,6 @@ class IntroSkipper {
     }
 
     // Check license: Free users can only use Auto-Skip on Netflix/YouTube
-    const platform = getPlatform(window.location.hostname);
     if (!License.canUseAutoSkip(platform)) {
       if (settings.autoSkip?.debugMode) {
         console.log(
@@ -845,7 +982,7 @@ class IntroSkipper {
   startWatching() {
     // Polling: Alle X Millisekunden nach Button suchen
     this.intervalId = setInterval(() => {
-      if (this.enabled || this.skipRecapEnabled) {
+      if (this.enabled || this.skipRecapEnabled || this.skipAdsEnabled) {
         this.checkForSkipButton();
       }
     }, settings.autoSkip?.buttonCheckInterval || this.checkInterval);
@@ -853,7 +990,7 @@ class IntroSkipper {
     // MutationObserver: React to new buttons (with debounce)
     this.mutationTimeout = null;
     this.observer = new MutationObserver((mutations) => {
-      if (this.enabled || this.skipRecapEnabled) {
+      if (this.enabled || this.skipRecapEnabled || this.skipAdsEnabled) {
         // Check if any video elements were added - invalidate cache
         for (const mutation of mutations) {
           for (const node of mutation.addedNodes) {
@@ -1018,6 +1155,22 @@ class IntroSkipper {
         dataTestId.includes("recap") ||
         dataTestId.includes("credits");
 
+      // Check if it's an ad skip button
+      const isAd =
+        buttonText.includes("skip ad") ||
+        buttonText.includes("werbung") ||
+        buttonText.includes("ad") ||
+        ariaLabel.includes("skip ad") ||
+        ariaLabel.includes("werbung") ||
+        dataTestId.includes("skip-ad") ||
+        dataTestId.includes("skipAd") ||
+        foundSelector.includes("ytp-ad-skip");
+
+      // Wenn es ein Ad ist, nur klicken wenn Ad-Skip aktiviert
+      if (isAd && !this.skipAdsEnabled) {
+        return;
+      }
+
       // Wenn es ein Recap ist, nur klicken wenn Recap-Skip aktiviert
       if (isRecap && !this.skipRecapEnabled) {
         return;
@@ -1040,13 +1193,18 @@ class IntroSkipper {
         return;
       }
 
-      // For unknown buttons (neither clearly intro nor recap),
-      // click if either intro or recap skip is enabled
-      if (!isIntro && !isRecap && !this.enabled && !this.skipRecapEnabled) {
+      // For unknown buttons (neither clearly intro, recap, nor ad),
+      // click if any skip is enabled
+      if (!isIntro && !isRecap && !isAd && !this.enabled && !this.skipRecapEnabled && !this.skipAdsEnabled) {
         return;
       }
 
-      this.clickButton(foundButton, foundSelector, isRecap ? "Recap" : "Intro");
+      // Determine skip type for stats
+      let skipType = "Intro";
+      if (isRecap) skipType = "Recap";
+      else if (isAd) skipType = "Ad";
+
+      this.clickButton(foundButton, foundSelector, skipType);
     }
   }
 
@@ -1380,11 +1538,13 @@ class IntroSkipper {
     // Average time saved per skip (in seconds)
     const AVG_INTRO_SECONDS = 30;
     const AVG_RECAP_SECONDS = 45;
+    const AVG_AD_SECONDS = 15; // Average ad duration
 
     chrome.storage.sync.get("stats", (data) => {
       const stats = data.stats || {
         introsSkipped: 0,
         recapsSkipped: 0,
+        adsSkipped: 0,
         totalTimeSaved: 0,
       };
 
@@ -1394,9 +1554,15 @@ class IntroSkipper {
       } else if (type === "Recap") {
         stats.recapsSkipped = (stats.recapsSkipped || 0) + 1;
         stats.totalTimeSaved = (stats.totalTimeSaved || 0) + AVG_RECAP_SECONDS;
+      } else if (type === "Ad") {
+        stats.adsSkipped = (stats.adsSkipped || 0) + 1;
+        stats.totalTimeSaved = (stats.totalTimeSaved || 0) + AVG_AD_SECONDS;
       }
 
-      chrome.storage.sync.set({ stats });
+      chrome.storage.sync.set({ stats }, () => {
+        // Trigger streak update when stats change
+        chrome.runtime.sendMessage({ action: 'updateStreak' }).catch(() => {});
+      });
     });
   }
 
@@ -1404,6 +1570,7 @@ class IntroSkipper {
     const messages = {
       Intro: "⏩ Intro skipped",
       Recap: "⏩ Recap skipped",
+      Ad: "⏩ Ad skipped",
     };
 
     const notification = document.createElement("div");
