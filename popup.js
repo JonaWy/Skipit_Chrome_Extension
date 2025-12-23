@@ -92,30 +92,38 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Load Settings & Presets
   chrome.storage.sync.get(
-    ["presets", "presetNames", "darkMode", "autoSkip"],
+    ["presets", "presetNames", "darkMode", "autoSkip", "siteSettings"],
     (data) => {
       // Apply Dark Mode
       if (data.darkMode) {
         document.body.classList.add("dark-mode");
       }
 
-      // Initialize Toggles - Check if current site is supported first
+      // Initialize Toggles - Check if current site is supported and enabled
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const introToggle = document.getElementById("toggleIntro");
         const recapToggle = document.getElementById("toggleRecap");
 
         if (tabs[0]) {
           const hostname = new URL(tabs[0].url || "").hostname;
+          const platform = getPlatform(hostname);
           const isSupported = isSupportedStreamingPlatform(hostname);
 
-          if (isSupported) {
-            // Only set toggle states on supported sites
+          // Check if the platform is enabled in site settings (default: true)
+          const siteSettings = data.siteSettings || {};
+          const isPlatformEnabled = siteSettings[platform] !== false;
+
+          // Toggles should only be active if site is supported AND enabled in settings
+          const shouldEnableToggles = isSupported && isPlatformEnabled;
+
+          if (shouldEnableToggles) {
+            // Only set toggle states on supported and enabled sites
             if (introToggle)
               introToggle.checked = data.autoSkip?.introEnabled || false;
             if (recapToggle)
               recapToggle.checked = data.autoSkip?.recapEnabled || false;
           } else {
-            // Disable and uncheck toggles on unsupported sites
+            // Disable and uncheck toggles on unsupported or disabled sites
             if (introToggle) {
               introToggle.checked = false;
               introToggle.disabled = true;
@@ -150,49 +158,70 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
       });
 
-      // Intro - Only enable on supported platforms
+      // Intro - Only enable on supported and enabled platforms
       document
         .getElementById("toggleIntro")
         ?.addEventListener("change", (e) => {
-          // Check if current site is supported before allowing toggle
+          // Check if current site is supported and enabled before allowing toggle
           chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs[0]) {
               const hostname = new URL(tabs[0].url || "").hostname;
-              if (!isSupportedStreamingPlatform(hostname)) {
-                e.target.checked = false;
-                return;
-              }
+              const platform = getPlatform(hostname);
 
-              const enabled = e.target.checked;
-              // update nested object safely
-              chrome.storage.sync.get("autoSkip", (current) => {
-                const autoSkip = current.autoSkip || {};
-                autoSkip.introEnabled = enabled;
-                chrome.storage.sync.set({ autoSkip });
-              });
+              chrome.storage.sync.get(
+                ["autoSkip", "siteSettings"],
+                (current) => {
+                  const siteSettings = current.siteSettings || {};
+                  const isPlatformEnabled = siteSettings[platform] !== false;
+
+                  if (
+                    !isSupportedStreamingPlatform(hostname) ||
+                    !isPlatformEnabled
+                  ) {
+                    e.target.checked = false;
+                    return;
+                  }
+
+                  const enabled = e.target.checked;
+                  const autoSkip = current.autoSkip || {};
+                  autoSkip.introEnabled = enabled;
+                  chrome.storage.sync.set({ autoSkip });
+                }
+              );
             }
           });
         });
 
-      // Recap - Only enable on supported platforms
+      // Recap - Only enable on supported and enabled platforms
       document
         .getElementById("toggleRecap")
         ?.addEventListener("change", (e) => {
-          // Check if current site is supported before allowing toggle
+          // Check if current site is supported and enabled before allowing toggle
           chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs[0]) {
               const hostname = new URL(tabs[0].url || "").hostname;
-              if (!isSupportedStreamingPlatform(hostname)) {
-                e.target.checked = false;
-                return;
-              }
+              const platform = getPlatform(hostname);
 
-              const enabled = e.target.checked;
-              chrome.storage.sync.get("autoSkip", (current) => {
-                const autoSkip = current.autoSkip || {};
-                autoSkip.recapEnabled = enabled;
-                chrome.storage.sync.set({ autoSkip });
-              });
+              chrome.storage.sync.get(
+                ["autoSkip", "siteSettings"],
+                (current) => {
+                  const siteSettings = current.siteSettings || {};
+                  const isPlatformEnabled = siteSettings[platform] !== false;
+
+                  if (
+                    !isSupportedStreamingPlatform(hostname) ||
+                    !isPlatformEnabled
+                  ) {
+                    e.target.checked = false;
+                    return;
+                  }
+
+                  const enabled = e.target.checked;
+                  const autoSkip = current.autoSkip || {};
+                  autoSkip.recapEnabled = enabled;
+                  chrome.storage.sync.set({ autoSkip });
+                }
+              );
             }
           });
         });
@@ -247,36 +276,51 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   );
 
-  // Get current speed from active tab and check if site is supported
+  // Get current speed from active tab and check if site is supported and enabled
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0]) {
-      // Check if current site supports skip features
+      // Check if current site supports skip features and is enabled in settings
       const hostname = new URL(tabs[0].url || "").hostname;
+      const platform = getPlatform(hostname);
       const isSupported = isSupportedStreamingPlatform(hostname);
 
-      // Show/disable skip toggles based on site support
+      // Show/disable skip toggles based on site support and settings
       const togglesSection = document.querySelector(".toggles-section");
       const introToggle = document.getElementById("toggleIntro");
       const recapToggle = document.getElementById("toggleRecap");
       const unsupportedNote = document.getElementById("unsupportedNote");
 
-      if (!isSupported) {
-        // Show toggles section but disable toggles and show note
-        if (togglesSection) {
-          togglesSection.classList.add("unsupported");
+      // Also check site settings
+      chrome.storage.sync.get(["siteSettings"], (data) => {
+        const siteSettings = data.siteSettings || {};
+        const isPlatformEnabled = siteSettings[platform] !== false;
+        const shouldEnableToggles = isSupported && isPlatformEnabled;
+
+        if (!shouldEnableToggles) {
+          // Show toggles section but disable toggles and show note
+          if (togglesSection) {
+            togglesSection.classList.add("unsupported");
+          }
+          if (unsupportedNote) {
+            unsupportedNote.style.display = "block";
+            // Show different message based on reason
+            if (isSupported && !isPlatformEnabled) {
+              unsupportedNote.textContent =
+                "This service is disabled in settings.";
+            } else {
+              unsupportedNote.textContent = "Not available on this site.";
+            }
+          }
+        } else {
+          // Show toggles section fully enabled
+          if (togglesSection) {
+            togglesSection.classList.remove("unsupported");
+          }
+          if (unsupportedNote) {
+            unsupportedNote.style.display = "none";
+          }
         }
-        if (unsupportedNote) {
-          unsupportedNote.style.display = "block";
-        }
-      } else {
-        // Show toggles section fully enabled
-        if (togglesSection) {
-          togglesSection.classList.remove("unsupported");
-        }
-        if (unsupportedNote) {
-          unsupportedNote.style.display = "none";
-        }
-      }
+      });
 
       // Fetch speed with retry logic for race conditions
       // (video might not be ready immediately after page load)
