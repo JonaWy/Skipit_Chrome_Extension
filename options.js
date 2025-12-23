@@ -1,14 +1,3 @@
-const defaultSettings = {
-  shortcuts: {
-    faster: "+",
-    slower: "-",
-  },
-};
-
-const shortcutLabels = {
-  faster: "Faster (+0.25)",
-  slower: "Slower (-0.25)",
-};
 const supportedSites = [
   { id: "netflix", name: "Netflix" },
   { id: "youtube", name: "YouTube" },
@@ -154,24 +143,6 @@ function loadSettings() {
       document.body.classList.remove("dark-mode");
     }
 
-    // Shortcuts
-    const scContainer = document.getElementById("shortcutsContainer");
-    scContainer.innerHTML = "";
-
-    // Always enforce only these two exist for display, regardless of storage garbage
-    const minimalShortcuts = ["faster", "slower"];
-
-    minimalShortcuts.forEach((key) => {
-      const val = settings.shortcuts?.[key] || defaultSettings.shortcuts[key];
-      const row = document.createElement("div");
-      row.className = "shortcut-row";
-      row.innerHTML = `
-                <label>${shortcutLabels[key] || key}</label>
-                <input type="text" maxlength="1" id="sc_${key}" value="${val}">
-             `;
-      scContainer.appendChild(row);
-    });
-
     // Presets - Support up to 8 for Premium, always show all 8 slots
     const pContainer = document.getElementById("presetsContainer");
     pContainer.innerHTML = "";
@@ -273,9 +244,10 @@ function loadSettings() {
         });
     }
 
-    // Streaming Services
+    // Streaming Services - Chip/Pill Style
     const sContainer = document.getElementById("servicesContainer");
     sContainer.innerHTML = "";
+    sContainer.className = "services-chips";
     const siteSettings = settings.siteSettings || {};
 
     // Free platforms (available without premium)
@@ -285,31 +257,44 @@ function loadSettings() {
       const isEnabled = siteSettings[site.id] !== false; // Default true
       const isLocked = !License.isPremium && !freePlatforms.includes(site.id);
 
-      const div = document.createElement("label");
-      div.className =
-        "toggle-container service-item" + (isLocked ? " locked" : "");
-
-      const lockIcon = isLocked ? '<span class="pro-tag">PRO</span>' : "";
-      const disabledAttr = isLocked ? "disabled" : "";
-
-      div.innerHTML = `
-                <span class="toggle-label">${site.name}${lockIcon}</span>
-                <input type="checkbox" id="site_${
-                  site.id
-                }" class="toggle-checkbox" ${
-        isEnabled && !isLocked ? "checked" : ""
-      } ${disabledAttr}>
-                <span class="toggle-switch"></span>
-            `;
-      sContainer.appendChild(div);
-
-      // If locked, show upgrade prompt on click
+      const chip = document.createElement("div");
+      chip.className = "service-chip";
+      chip.dataset.siteId = site.id;
+      
+      if (isEnabled && !isLocked) {
+        chip.classList.add("active");
+      }
       if (isLocked) {
-        div.addEventListener("click", (e) => {
+        chip.classList.add("locked");
+      }
+
+      const proBadge = isLocked ? '<span class="pro-badge">PRO</span>' : "";
+      chip.innerHTML = `${site.name}${proBadge}`;
+
+      // Hidden checkbox for form compatibility
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.id = `site_${site.id}`;
+      checkbox.className = "toggle-checkbox";
+      checkbox.style.display = "none";
+      checkbox.checked = isEnabled && !isLocked;
+      checkbox.disabled = isLocked;
+      chip.appendChild(checkbox);
+
+      // Click handler
+      chip.addEventListener("click", (e) => {
+        if (isLocked) {
           e.preventDefault();
           chrome.runtime.sendMessage({ action: "openUpgradePage" });
-        });
-      }
+          return;
+        }
+        
+        chip.classList.toggle("active");
+        checkbox.checked = chip.classList.contains("active");
+        saveSettings();
+      });
+
+      sContainer.appendChild(chip);
     });
 
     // Auto Skip Static Inputs
@@ -353,18 +338,11 @@ function saveSettings() {
     const existingAutoSkip = data.autoSkip || {};
 
     const newSettings = {
-      shortcuts: {},
       presets: [],
       presetNames: [],
       autoSkip: {},
       osd: {},
     };
-
-    // Shortcuts
-    document.querySelectorAll('[id^="sc_"]').forEach((input) => {
-      const key = input.id.replace("sc_", "");
-      newSettings.shortcuts[key] = input.value.toLowerCase();
-    });
 
     // Presets - Support up to 8 for Premium
     const maxPresets = License.isPremium ? 8 : 4;
