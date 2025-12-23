@@ -66,18 +66,6 @@
         <button id="upgradeBtn" class="upgrade-btn">Upgrade</button>
       </div>
 
-      <!-- Streak Display -->
-      <div id="streakDisplay" class="streak-display" style="display: none">
-        <div class="streak-info">
-          <span class="streak-icon">🔥</span>
-          <div class="streak-details">
-            <span class="streak-label">Day Streak</span>
-            <span class="streak-value" id="streakValue">0</span>
-          </div>
-        </div>
-        <div id="streakBadges" class="streak-badges"></div>
-      </div>
-
       <section class="speed-display-section">
         <span id="speedValue">1.00x</span>
       </section>
@@ -116,11 +104,9 @@
           <input type="checkbox" id="toggleRecap" class="toggle-checkbox" />
           <span class="toggle-switch"></span>
         </label>
-        <label class="toggle-container">
-          <span class="toggle-label">Skip Ads <span class="premium-feature-tag" style="display: none" id="skipAdsPremiumTag">PRO</span></span>
-          <input type="checkbox" id="toggleSkipAds" class="toggle-checkbox" />
-          <span class="toggle-switch"></span>
-        </label>
+        <div id="unsupportedNote" class="unsupported-note" style="display: none;">
+          Not available on this site.
+        </div>
       </section>
 
       <button id="openOptions" class="footer-link">
@@ -143,14 +129,6 @@
           <div class="onboarding-dots"></div>
           <button id="onboardingNext" class="primary-button">Next</button>
         </div>
-      </div>
-    </div>
-
-    <!-- Quick Tips -->
-    <div id="quickTips" class="quick-tips" style="display: none;">
-      <div class="quick-tip-content">
-        <span id="quickTipText"></span>
-        <button id="dismissTip" class="quick-tip-dismiss">×</button>
       </div>
     </div>
 

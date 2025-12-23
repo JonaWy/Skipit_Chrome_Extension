@@ -76,7 +76,6 @@ chrome.runtime.onInstalled.addListener((details) => {
       autoSkip: {
         introEnabled: true,
         recapEnabled: true,
-        skipAdsEnabled: false,
         introButtonClick: true,
         introFallbackSeconds: 10,
         outroEnabled: false,
@@ -93,12 +92,6 @@ chrome.runtime.onInstalled.addListener((details) => {
         recapsSkipped: 0,
         adsSkipped: 0,
         totalTimeSaved: 0
-      },
-      streaks: {
-        current: 0,
-        longest: 0,
-        lastDate: null,
-        badges: []
       },
       osd: {
         enabled: true,
@@ -123,88 +116,6 @@ chrome.runtime.onInstalled.addListener((details) => {
     chrome.storage.local.set({ premiumStatus: false }, () => {
       console.log('[SkipIt] License initialized (Free tier)');
     });
-  }
-});
-
-// Streak management functions
-async function updateStreak() {
-  try {
-    const data = await chrome.storage.sync.get(['streaks']);
-    const streaks = data.streaks || {
-      current: 0,
-      longest: 0,
-      lastDate: null,
-      badges: []
-    };
-
-    const today = new Date().toDateString();
-    const lastDate = streaks.lastDate ? new Date(streaks.lastDate).toDateString() : null;
-
-    if (lastDate === today) {
-      // Already updated today, no change needed
-      return streaks;
-    }
-
-    if (lastDate && lastDate !== today) {
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toDateString();
-
-      if (lastDate === yesterdayStr) {
-        // Consecutive day - increment streak
-        streaks.current = (streaks.current || 0) + 1;
-      } else {
-        // Streak broken - reset to 1
-        streaks.current = 1;
-      }
-    } else {
-      // First time or new day - start streak
-      streaks.current = streaks.current ? streaks.current + 1 : 1;
-    }
-
-    // Update longest streak
-    if (streaks.current > streaks.longest) {
-      streaks.longest = streaks.current;
-    }
-
-    streaks.lastDate = today;
-
-    // Check for badge milestones
-    const badgeMilestones = [7, 14, 30, 60, 100, 365];
-    const newBadges = [];
-    badgeMilestones.forEach(milestone => {
-      if (streaks.current === milestone && !streaks.badges.includes(milestone)) {
-        streaks.badges.push(milestone);
-        newBadges.push(milestone);
-      }
-    });
-
-    await chrome.storage.sync.set({ streaks });
-
-    // Notify about new badges
-    if (newBadges.length > 0) {
-      chrome.runtime.sendMessage({
-        action: "newBadge",
-        badges: newBadges
-      }).catch(() => {});
-    }
-
-    return streaks;
-  } catch (error) {
-    console.error('[SkipIt] Error updating streak:', error);
-    return null;
-  }
-}
-
-// Debounced streak update for better performance
-let streakUpdateTimeout = null;
-chrome.storage.onChanged.addListener((changes) => {
-  if (changes.stats) {
-    // Debounce streak update to avoid excessive calculations
-    if (streakUpdateTimeout) clearTimeout(streakUpdateTimeout);
-    streakUpdateTimeout = setTimeout(() => {
-      updateStreak();
-    }, 500);
   }
 });
 
@@ -246,21 +157,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }).catch(() => {});
       });
     });
-  }
-
-  // Handle streak update request
-  if (request.action === "updateStreak") {
-    updateStreak().then(streaks => {
-      sendResponse({ streaks });
-    });
-    return true; // Keep channel open for async response
-  }
-
-  // Handle get streak request
-  if (request.action === "getStreak") {
-    chrome.storage.sync.get(['streaks'], (data) => {
-      sendResponse({ streaks: data.streaks || { current: 0, longest: 0, lastDate: null, badges: [] } });
-    });
-    return true; // Keep channel open for async response
   }
 });

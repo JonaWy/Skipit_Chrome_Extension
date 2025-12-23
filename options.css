@@ -1,17 +1,19 @@
 :root {
   /* Colors - Light Mode (matching the provided design) */
-  --color-primary: #4164d8;
-  --color-primary-hover: #3454c8;
+  --color-primary: #6366f1;
+  --color-primary-foreground: #ffffff;
+  --color-primary-hover: #4f46e5;
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
 
   --color-bg-primary: #ffffff;
   --color-bg-page: #f8fafc;
+  --color-bg-secondary: #d6d3d1;
   --color-bg-tertiary: #f1f5f9;
 
   --color-text-primary: #0f172a;
-  --color-text-secondary: #64748b;
+  --color-text-secondary: #4b5563;
   --color-text-tertiary: #94a3b8;
 
   --color-border: #e2e8f0;
@@ -225,7 +227,7 @@ body.dark-mode .theme-toggle:hover {
 }
 
 .toggle-checkbox:checked + .toggle-switch {
-  background: #4164d8;
+  background: var(--color-primary);
 }
 
 .toggle-switch::after {
@@ -302,7 +304,99 @@ select:focus {
   outline: none;
   background: var(--color-bg-primary);
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+/* Range Sliders (for OSD settings) */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  margin: 0;
+  background: transparent;
+}
+
+input[type="range"]:focus {
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: var(--color-bg-secondary);
+  border-radius: 2px;
+  transition: background 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: var(--color-bg-primary);
+  border: 2px solid #6366f1;
+  cursor: pointer;
+  -webkit-appearance: none;
+  margin-top: -8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  border-color: var(--color-primary-hover);
+}
+
+/* Firefox */
+input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: var(--color-bg-secondary);
+  border-radius: 2px;
+}
+
+input[type="range"]::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: var(--color-bg-primary);
+  border: 2px solid #6366f1;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  border-color: var(--color-primary-hover);
+}
+
+/* Dark Mode Range Sliders */
+body.dark-mode input[type="range"]::-webkit-slider-runnable-track {
+  background: var(--color-bg-secondary);
+}
+
+body.dark-mode input[type="range"]::-webkit-slider-thumb {
+  background: var(--color-bg-primary);
+  border-color: #818cf8;
+}
+
+body.dark-mode input[type="range"]::-webkit-slider-thumb:hover {
+  border-color: var(--color-primary-hover);
+}
+
+body.dark-mode input[type="range"]::-moz-range-track {
+  background: var(--color-bg-secondary);
+}
+
+body.dark-mode input[type="range"]::-moz-range-thumb {
+  background: var(--color-bg-primary);
+  border-color: #818cf8;
+}
+
+body.dark-mode input[type="range"]::-moz-range-thumb:hover {
+  border-color: var(--color-primary-hover);
 }
 
 /* Specialized inputs */
@@ -368,7 +462,7 @@ select:focus {
 .primary-button {
   padding: 10px 20px;
   background: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-primary-foreground);
   border: none;
   border-radius: 10px;
   font-size: var(--font-size-base);
@@ -380,7 +474,7 @@ select:focus {
 .primary-button:hover {
   background: var(--color-primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 .primary-button:active {
@@ -415,15 +509,20 @@ select:focus {
 
 /* Dark Mode Overrides */
 body.dark-mode {
+  --color-primary: #818cf8;
+  --color-primary-foreground: #1e1b18;
+  --color-primary-hover: #a5b4fc;
+
   --color-bg-primary: #1d1d20;
   /* Card background */
   --color-bg-page: #131316;
   /* Page background */
+  --color-bg-secondary: #3a3633;
   --color-bg-tertiary: #2a2a2e;
   /* Inputs, secondary buttons */
 
   --color-text-primary: #f8fafc;
-  --color-text-secondary: #94a3b8;
+  --color-text-secondary: #d1d5db;
   --color-text-tertiary: #64748b;
 
   --color-border: #38383c;
@@ -464,8 +563,8 @@ body.dark-mode .toggle-switch {
 /* Premium Badge */
 .premium-badge {
   display: inline-block;
-  background: linear-gradient(135deg, #4164d8, #6b8dd6);
-  color: white;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: var(--color-primary-foreground);
   font-size: 10px;
   font-weight: 700;
   padding: 3px 8px;
@@ -475,11 +574,16 @@ body.dark-mode .toggle-switch {
   letter-spacing: 0.5px;
 }
 
+body.dark-mode .premium-badge {
+  background: linear-gradient(135deg, #818cf8, #a5b4fc);
+  color: var(--color-primary-foreground);
+}
+
 /* Premium Feature Tag */
 .premium-feature-tag {
   display: inline-block;
-  background: linear-gradient(135deg, #4164d8, #6b8dd6);
-  color: white;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: var(--color-primary-foreground);
   font-size: 9px;
   font-weight: 700;
   padding: 2px 6px;
@@ -487,6 +591,11 @@ body.dark-mode .toggle-switch {
   margin-left: 8px;
   vertical-align: middle;
   letter-spacing: 0.5px;
+}
+
+body.dark-mode .premium-feature-tag {
+  background: linear-gradient(135deg, #818cf8, #a5b4fc);
+  color: var(--color-primary-foreground);
 }
 
 /* Free Hint Text */
@@ -500,9 +609,14 @@ body.dark-mode .toggle-switch {
 
 /* Upgrade Card */
 .upgrade-card {
-  background: linear-gradient(135deg, #4164d8, #6b8dd6) !important;
-  color: white;
+  background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+  color: var(--color-primary-foreground);
   border: none !important;
+}
+
+body.dark-mode .upgrade-card {
+  background: linear-gradient(135deg, #818cf8, #a5b4fc) !important;
+  color: var(--color-primary-foreground);
 }
 
 .upgrade-content {
@@ -534,8 +648,12 @@ body.dark-mode .toggle-switch {
 
 .upgrade-card .primary-button {
   background: white;
-  color: #4164d8;
+  color: #6366f1;
   flex-shrink: 0;
+}
+
+body.dark-mode .upgrade-card .primary-button {
+  color: #818cf8;
 }
 
 .upgrade-card .primary-button:hover {
@@ -557,18 +675,23 @@ body.dark-mode .toggle-switch {
   margin-left: 8px;
   font-size: 9px;
   font-weight: 700;
-  background: linear-gradient(135deg, #4164d8, #6b8dd6);
-  color: white;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: var(--color-primary-foreground);
   padding: 2px 5px;
   border-radius: 3px;
   letter-spacing: 0.3px;
   vertical-align: middle;
 }
 
+body.dark-mode .service-item .pro-tag {
+  background: linear-gradient(135deg, #818cf8, #a5b4fc);
+  color: var(--color-primary-foreground);
+}
+
 /* Subscription Management Card */
 .subscription-card {
   background: var(--color-bg-primary);
-  border: 2px solid #4164d8;
+  border: 2px solid var(--color-primary);
 }
 
 .subscription-content {
@@ -586,7 +709,14 @@ body.dark-mode .toggle-switch {
 
 .subscription-icon {
   font-size: 28px;
-  background: linear-gradient(135deg, #4164d8, #6b8dd6);
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+body.dark-mode .subscription-icon {
+  background: linear-gradient(135deg, #818cf8, #a5b4fc);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -612,7 +742,7 @@ body.dark-mode .toggle-switch {
 
 /* Dark mode subscription card */
 body.dark-mode .subscription-card {
-  border-color: #4164d8;
+  border-color: var(--color-primary);
 }
 
 /* Collapsible Section */
@@ -665,7 +795,7 @@ body.dark-mode .subscription-card {
 }
 
 .collapsible-content.expanded {
-  max-height: 1000px;
+  max-height: 3000px;
   opacity: 1;
   padding-top: 16px;
 }
@@ -682,4 +812,135 @@ body.dark-mode .collapsible-header {
 
 body.dark-mode .collapsible-header:hover {
   background: var(--color-bg-tertiary);
+}
+
+/* Preset Grid Layout - Matching Popup Style */
+.presets-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+}
+
+.preset-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.preset-button-input {
+  width: 100%;
+  aspect-ratio: 1;
+  min-height: 52px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  padding: 0;
+  text-align: center;
+  cursor: text;
+  transition: all 0.2s ease;
+  font-size: var(--font-size-lg);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preset-button-input:hover {
+  background: #e2e8f0;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.preset-button-input:focus {
+  outline: none;
+  background: var(--color-bg-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  transform: translateY(-2px);
+}
+
+.preset-button-input.locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--color-bg-tertiary);
+}
+
+.preset-button-input.locked:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.preset-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Dark Mode Preset Grid */
+body.dark-mode .preset-button-input {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+body.dark-mode .preset-button-input:hover {
+  background: #38383c;
+}
+
+body.dark-mode .preset-button-input:focus {
+  background: var(--color-bg-primary);
+  border-color: var(--color-primary);
+}
+
+body.dark-mode .preset-button-input.locked {
+  background: var(--color-bg-tertiary);
+}
+
+/* Preset Info Text */
+.presets-info {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
+}
+
+/* Preset Upgrade Prompt */
+.presets-upgrade-prompt {
+  margin-top: 16px;
+  padding: 16px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+.presets-upgrade-prompt p {
+  margin: 0 0 12px 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+/* Preset PRO Tag */
+.preset-item {
+  position: relative;
+}
+
+.preset-pro-tag {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  font-size: 8px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: var(--color-primary-foreground);
+  padding: 2px 4px;
+  border-radius: 3px;
+  letter-spacing: 0.3px;
+  pointer-events: none;
+}
+
+body.dark-mode .preset-pro-tag {
+  background: linear-gradient(135deg, #818cf8, #a5b4fc);
+  color: var(--color-primary-foreground);
 }
