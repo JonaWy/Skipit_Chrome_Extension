@@ -245,7 +245,7 @@ chrome.storage.sync.get(null, async (items) => {
   // Check platform access (Free: Netflix/YouTube only)
   if (!License.canUsePlatform(platform)) {
     console.log("[SkipIt] Platform requires Premium:", platform);
-    showUpgradePrompt(platform);
+    // Upgrade prompt removed - no longer showing intrusive notifications to free users
     return;
   }
 

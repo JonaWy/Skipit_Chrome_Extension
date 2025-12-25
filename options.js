@@ -95,7 +95,7 @@ function updateLicenseUI() {
     if (premiumBadge) premiumBadge.style.display = "none";
     if (upgradeCard) upgradeCard.style.display = "block";
     if (subscriptionCard) subscriptionCard.style.display = "none";
-    if (platformsPremiumTag) platformsPremiumTag.style.display = "inline-block";
+    if (platformsPremiumTag) platformsPremiumTag.style.display = "none";
     if (platformsHint) platformsHint.style.display = "block";
   }
 }
@@ -227,23 +227,6 @@ function loadSettings() {
       presetsGrid.appendChild(presetItem);
     }
 
-    // Add upgrade prompt for free users
-    if (!License.isPremium) {
-      const upgradePrompt = document.createElement("div");
-      upgradePrompt.className = "presets-upgrade-prompt";
-      upgradePrompt.innerHTML = `
-        <p>Unlock all 8 presets with Premium!</p>
-        <button id="upgradePresetsBtn" class="primary-button" style="width: 100%; padding: 10px;">Upgrade Now</button>
-      `;
-      pContainer.appendChild(upgradePrompt);
-
-      document
-        .getElementById("upgradePresetsBtn")
-        ?.addEventListener("click", () => {
-          chrome.runtime.sendMessage({ action: "openUpgradePage" });
-        });
-    }
-
     // Streaming Services - Chip/Pill Style
     const sContainer = document.getElementById("servicesContainer");
     sContainer.innerHTML = "";
@@ -281,21 +264,39 @@ function loadSettings() {
       checkbox.disabled = isLocked;
       chip.appendChild(checkbox);
 
-      // Click handler
-      chip.addEventListener("click", (e) => {
-        if (isLocked) {
-          e.preventDefault();
-          chrome.runtime.sendMessage({ action: "openUpgradePage" });
-          return;
-        }
-        
-        chip.classList.toggle("active");
-        checkbox.checked = chip.classList.contains("active");
-        saveSettings();
-      });
+      // Click handler - disabled for locked services
+      if (!isLocked) {
+        chip.addEventListener("click", (e) => {
+          chip.classList.toggle("active");
+          checkbox.checked = chip.classList.contains("active");
+          saveSettings();
+        });
+      } else {
+        // Add tooltip for locked services
+        chip.title = "Available for Pro users";
+      }
 
       sContainer.appendChild(chip);
     });
+
+    // Add notice for locked services (free users only)
+    if (!License.isPremium) {
+      const hasLockedServices = supportedSites.some(
+        (site) => !freePlatforms.includes(site.id)
+      );
+      if (hasLockedServices) {
+        const notice = document.createElement("p");
+        notice.className = "locked-services-notice";
+        notice.textContent = "Services marked with PRO are available for Pro users";
+        notice.style.cssText = `
+          font-size: var(--font-size-xs);
+          color: var(--color-text-secondary);
+          margin-top: 12px;
+          font-style: italic;
+        `;
+        sContainer.appendChild(notice);
+      }
+    }
 
     // Auto Skip Static Inputs
     document.getElementById("showNotifications").checked =

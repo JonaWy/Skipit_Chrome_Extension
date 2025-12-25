@@ -730,11 +730,12 @@ body.dark-mode .upgrade-card .primary-button {
 
 .service-chip.locked {
   opacity: 0.6;
-  cursor: pointer;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .service-chip.locked:hover {
-  opacity: 0.8;
+  opacity: 0.6;
 }
 
 .service-chip .pro-badge {
