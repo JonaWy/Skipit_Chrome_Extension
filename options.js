@@ -108,6 +108,13 @@ function formatSpeedForName(val) {
   return val.toString();
 }
 
+function parseSpeedValue(value) {
+  // Parse speed value accepting both comma and dot as decimal separator
+  // Replace comma with dot for parsing
+  const normalizedValue = String(value).replace(/,/g, ".");
+  return parseFloat(normalizedValue);
+}
+
 function debounce(func, wait) {
   let timeout;
   return function (...args) {
@@ -149,16 +156,17 @@ function loadSettings() {
 
     const totalPresets = 8;
     const maxEditablePresets = License.isPremium ? 8 : 4;
-    const defaultPresets = [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 3.0];
+    const defaultPresets = [1.0, 1.25, 1.5, 1.75, 2.5, 3.0, 3.5, 4.0];
 
-    const presets = settings.presets || defaultPresets.slice(0, maxEditablePresets);
+    const presets =
+      settings.presets || defaultPresets.slice(0, maxEditablePresets);
 
     // Add info text
     const infoText = document.createElement("p");
     infoText.className = "presets-info";
     infoText.textContent = License.isPremium
       ? "Click any preset to edit its speed value"
-      : "Free: 4 presets. Upgrade to unlock all 8.";
+      : "Free: 4 presets. Upgrade to PRO to unlock all 8.";
     pContainer.appendChild(infoText);
 
     // Create preset grid
@@ -168,7 +176,12 @@ function loadSettings() {
 
     for (let i = 0; i < totalPresets; i++) {
       const isLocked = !License.isPremium && i >= maxEditablePresets;
-      const presetValue = presets[i] !== undefined ? presets[i] : defaultPresets[i];
+      let presetValue =
+        presets[i] !== undefined ? presets[i] : defaultPresets[i];
+      // Clamp preset value to allowed range for free-tier users
+      if (!License.isPremium && i < maxEditablePresets) {
+        presetValue = License.clampSpeed(presetValue);
+      }
       const displayValue = formatSpeedForName(presetValue);
 
       const presetItem = document.createElement("div");
@@ -180,29 +193,36 @@ function loadSettings() {
       input.className = "preset-button-input" + (isLocked ? " locked" : "");
       input.value = displayValue;
       input.setAttribute("data-speed", presetValue);
-      
+
       if (isLocked) {
         input.disabled = true;
         input.title = "Upgrade to PRO to unlock";
       } else {
         // Handle input formatting
-        input.addEventListener("focus", function() {
+        input.addEventListener("focus", function () {
           // Show raw number on focus for easier editing
           this.select();
         });
-        
-        input.addEventListener("blur", function() {
+
+        input.addEventListener("blur", function () {
           // Parse and format on blur
-          let val = parseFloat(this.value);
+          let val = parseSpeedValue(this.value);
           if (isNaN(val)) val = 1.0;
-          // Clamp to valid range
-          val = Math.max(0.25, Math.min(4.0, val));
+          // Clamp to valid range based on license tier
+          if (License.isPremium) {
+            val = Math.max(0.25, Math.min(4.0, val));
+          } else {
+            // Free tier: only allow speeds between 1.0 and 2.0
+            val = Math.max(1.0, Math.min(2.0, val));
+          }
+          // Apply license-based clamping as final check
+          val = License.clampSpeed(val);
           const formatted = formatSpeedForName(val);
           this.value = formatted;
           this.setAttribute("data-speed", val);
         });
-        
-        input.addEventListener("keydown", function(e) {
+
+        input.addEventListener("keydown", function (e) {
           if (e.key === "Enter") {
             this.blur();
           }
@@ -215,7 +235,7 @@ function loadSettings() {
 
       presetItem.appendChild(input);
       presetItem.appendChild(label);
-      
+
       // Add PRO badge for locked presets (free users)
       if (isLocked) {
         const proBadge = document.createElement("span");
@@ -223,7 +243,7 @@ function loadSettings() {
         proBadge.textContent = "PRO";
         presetItem.appendChild(proBadge);
       }
-      
+
       presetsGrid.appendChild(presetItem);
     }
 
@@ -243,7 +263,7 @@ function loadSettings() {
       const chip = document.createElement("div");
       chip.className = "service-chip";
       chip.dataset.siteId = site.id;
-      
+
       if (isEnabled && !isLocked) {
         chip.classList.add("active");
       }
@@ -279,28 +299,7 @@ function loadSettings() {
       sContainer.appendChild(chip);
     });
 
-    // Add notice for locked services (free users only)
-    if (!License.isPremium) {
-      const hasLockedServices = supportedSites.some(
-        (site) => !freePlatforms.includes(site.id)
-      );
-      if (hasLockedServices) {
-        const notice = document.createElement("p");
-        notice.className = "locked-services-notice";
-        notice.textContent = "Services marked with PRO are available for Pro users";
-        notice.style.cssText = `
-          font-size: var(--font-size-xs);
-          color: var(--color-text-secondary);
-          margin-top: 12px;
-          font-style: italic;
-        `;
-        sContainer.appendChild(notice);
-      }
-    }
-
     // Auto Skip Static Inputs
-    document.getElementById("showNotifications").checked =
-      settings.autoSkip?.showNotifications !== false; // Default true
     document.getElementById("clickDelay").value =
       settings.autoSkip?.clickDelay || 500;
     document.getElementById("debugMode").checked =
@@ -316,10 +315,6 @@ function loadSettings() {
       document.getElementById("statRecaps").textContent =
         settings.stats.recapsSkipped || 0;
     }
-
-    // OSD
-    const osdEnabled = document.getElementById("osdEnabled");
-    if (osdEnabled) osdEnabled.checked = settings.osd?.enabled !== false;
 
     // ATTACH LISTENERS TO EVERYTHING NOW
     document.querySelectorAll("input, select").forEach((el) => {
@@ -354,9 +349,16 @@ function saveSettings() {
       const valInput = document.getElementById(`pval_${i}`);
       if (valInput) {
         // Parse the displayed value (formatted speed string like "1.5" or "2.0")
-        let speed = parseFloat(valInput.value) || 1.0;
-        // Clamp speed to allowed range
-        speed = Math.max(0.25, Math.min(4.0, speed));
+        // Accepts both comma and dot as decimal separator
+        let speed = parseSpeedValue(valInput.value) || 1.0;
+        // Clamp speed to allowed range based on license tier
+        if (License.isPremium) {
+          speed = Math.max(0.25, Math.min(4.0, speed));
+        } else {
+          // Free tier: only allow speeds between 1.0 and 2.0
+          speed = Math.max(1.0, Math.min(2.0, speed));
+        }
+        // Apply license-based clamping as final check
         const clampedSpeed = License.clampSpeed(speed);
         // Auto-generate name from speed value
         const presetName = formatSpeedForName(clampedSpeed);
@@ -388,15 +390,13 @@ function saveSettings() {
       outroEnabled: false,
       outroButtonClick: true,
       outroSeconds: 15,
-      showNotifications: document.getElementById("showNotifications").checked,
+      showNotifications: true, // Always enabled, no toggle available
       debugMode: document.getElementById("debugMode").checked,
     };
 
-    // OSD
-    const osdEnabledEl = document.getElementById("osdEnabled");
-
+    // OSD - Always enabled, no toggle available
     newSettings.osd = {
-      enabled: osdEnabledEl ? osdEnabledEl.checked : true,
+      enabled: true,
     };
 
     chrome.storage.sync.set(newSettings, () => {

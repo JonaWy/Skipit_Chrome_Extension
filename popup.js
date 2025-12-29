@@ -226,39 +226,60 @@ document.addEventListener("DOMContentLoaded", async () => {
           });
         });
 
-      // Determine max presets based on license
-      const maxPresets = License.isPremium ? 8 : 4;
-      const defaultPresets = License.isPremium
-        ? [1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 3.0]
-        : [1.0, 1.5, 2.0, 2.5];
-      const defaultNames = License.isPremium
-        ? ["Normal", "1.25x", "1.5x", "1.75x", "2.0x", "2.25x", "2.5x", "3.0x"]
-        : ["Normal", "1.5x", "2.0x", "2.5x"];
+      // Always show 8 presets, but mark some as Pro for free users
+      const defaultPresets = [1.0, 1.25, 1.5, 1.75, 2.5, 3.0, 3.5, 4.0];
+      const defaultNames = [
+        "Normal",
+        "1.25x",
+        "1.5x",
+        "1.75x",
+        "2.5x",
+        "3.0x",
+        "3.5x",
+        "4.0x",
+      ];
 
-      const presets = (data.presets || defaultPresets).slice(0, maxPresets);
-      const names = (data.presetNames || defaultNames).slice(0, maxPresets);
+      // Get saved presets (only first 4 for free users)
+      const savedPresets = data.presets || [];
+      const savedNames = data.presetNames || [];
 
-      // Update grid layout based on number of presets
-      if (presetContainer) {
-        if (maxPresets === 8) {
-          presetContainer.style.gridTemplateColumns = "repeat(4, 1fr)";
+      // Build final presets array: use saved for first 4, always use defaults for last 4
+      const finalPresets = [];
+      const finalNames = [];
+
+      for (let i = 0; i < 8; i++) {
+        if (i < 4) {
+          // First 4: use saved if available, otherwise default
+          finalPresets[i] =
+            savedPresets[i] !== undefined ? savedPresets[i] : defaultPresets[i];
+          finalNames[i] =
+            savedNames[i] !== undefined ? savedNames[i] : defaultNames[i];
         } else {
-          presetContainer.style.gridTemplateColumns = "repeat(4, 1fr)";
+          // Last 4: always use defaults (these are locked for free users)
+          finalPresets[i] = defaultPresets[i];
+          finalNames[i] = defaultNames[i];
         }
       }
 
-      presets.forEach((val, idx) => {
+      // Always use 4-column grid for 8 presets
+      if (presetContainer) {
+        presetContainer.style.gridTemplateColumns = "repeat(4, 1fr)";
+      }
+
+      finalPresets.forEach((val, idx) => {
         const card = document.createElement("div");
         card.className = "preset-card";
 
-        // Check if preset is within allowed range for free users
-        const isLocked = !License.canUseSpeed(val);
+        // Check if preset should be locked for free users
+        // For free users, mark the last 4 presets (indices 4-7) as Pro/locked
+        // This ensures exactly 4 presets are labeled as Pro for free-tier users
+        const isLocked = !License.isPremium && idx >= 4;
         if (isLocked) {
           card.classList.add("locked");
         }
 
         // Show preset name if available, otherwise show speed
-        const displayText = names[idx] || formatSpeed(val);
+        const displayText = finalNames[idx] || formatSpeed(val);
         card.textContent = displayText;
         card.dataset.speed = val;
         card.title = `${displayText} (${formatSpeed(val)}x)`;

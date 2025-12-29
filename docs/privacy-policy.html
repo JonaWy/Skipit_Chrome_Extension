@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - SkipIt</title>
+    <style>
+        :root {
+            /* Colors - Light Mode */
+            --color-primary: #6366f1;
+            --color-primary-foreground: #ffffff;
+            --color-primary-hover: #4f46e5;
+            
+            --color-bg-primary: #ffffff;
+            --color-bg-page: #f8fafc;
+            --color-bg-secondary: #d6d3d1;
+            --color-bg-tertiary: #f1f5f9;
+            
+            --color-text-primary: #0f172a;
+            --color-text-secondary: #4b5563;
+            --color-text-tertiary: #94a3b8;
+            
+            --color-border: #e2e8f0;
+            --color-border-light: #f1f5f9;
+            
+            /* Spacing */
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 12px;
+            --spacing-lg: 16px;
+            --spacing-xl: 24px;
+            --spacing-2xl: 32px;
+            
+            /* Border Radius */
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+            
+            /* Typography */
+            --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+            --font-size-xs: 11px;
+            --font-size-sm: 13px;
+            --font-size-base: 15px;
+            --font-size-lg: 17px;
+            --font-size-xl: 20px;
+            --font-size-2xl: 28px;
+        }
+        
+        body {
+            background-color: var(--color-bg-page);
+            color: var(--color-text-primary);
+            font-family: var(--font-family);
+            margin: 0;
+            padding: 40px 24px;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--color-border);
+        }
+        
+        h1 {
+            font-size: var(--font-size-2xl);
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            color: var(--color-text-primary);
+        }
+        
+        .subtitle {
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-base);
+            margin: 0;
+        }
+        
+        .content {
+            background: var(--color-bg-primary);
+            border: 1px solid var(--color-border-light);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-2xl);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        h2 {
+            font-size: var(--font-size-xl);
+            font-weight: 600;
+            margin: 32px 0 16px 0;
+            color: var(--color-text-primary);
+        }
+        
+        h2:first-of-type {
+            margin-top: 0;
+        }
+        
+        h3 {
+            font-size: var(--font-size-lg);
+            font-weight: 600;
+            margin: 24px 0 12px 0;
+            color: var(--color-text-primary);
+        }
+        
+        p {
+            margin: 0 0 16px 0;
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-base);
+        }
+        
+        ul, ol {
+            margin: 0 0 16px 0;
+            padding-left: 24px;
+            color: var(--color-text-secondary);
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        .data-item {
+            background: var(--color-bg-tertiary);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .data-item strong {
+            color: var(--color-text-primary);
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .data-item span {
+            color: var(--color-text-secondary);
+            font-size: var(--font-size-sm);
+        }
+        
+        .footer {
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid var(--color-border);
+            text-align: center;
+            color: var(--color-text-tertiary);
+            font-size: var(--font-size-sm);
+        }
+        
+        a {
+            color: var(--color-primary);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        
+        a:hover {
+            color: var(--color-primary-hover);
+            text-decoration: underline;
+        }
+        
+        .highlight {
+            background: rgba(99, 102, 241, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: var(--color-primary);
+            font-weight: 500;
+        }
+        
+        /* Dark Mode */
+        body.dark-mode {
+            --color-primary: #818cf8;
+            --color-primary-foreground: #1e1b18;
+            --color-primary-hover: #a5b4fc;
+            
+            --color-bg-primary: #1d1d20;
+            --color-bg-page: #131316;
+            --color-bg-secondary: #3a3633;
+            --color-bg-tertiary: #2a2a2e;
+            
+            --color-text-primary: #f8fafc;
+            --color-text-secondary: #d1d5db;
+            --color-text-tertiary: #64748b;
+            
+            --color-border: #38383c;
+            --color-border-light: #2a2a2e;
+            
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+        }
+        
+        body.dark-mode .content {
+            border-color: var(--color-border);
+        }
+        
+        body.dark-mode .highlight {
+            background: rgba(129, 140, 248, 0.15);
+            color: var(--color-primary);
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 24px 16px;
+            }
+            
+            .content {
+                padding: var(--spacing-xl);
+            }
+            
+            h1 {
+                font-size: var(--font-size-xl);
+            }
+            
+            h2 {
+                font-size: var(--font-size-lg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Privacy Policy</h1>
+            <p class="subtitle">SkipIt Chrome Extension</p>
+            <p class="subtitle" style="font-size: var(--font-size-sm); margin-top: 4px;">Last updated: <span id="lastUpdated"></span></p>
+        </div>
+        
+        <div class="content">
+            <p>
+                This Privacy Policy describes how SkipIt ("we", "our", or "us") collects, uses, and stores your data when you use our Chrome browser extension. We are committed to protecting your privacy and being transparent about our data practices.
+            </p>
+            
+            <h2>1. Data We Collect</h2>
+            
+            <h3>1.1 Settings Data (Chrome Storage Sync)</h3>
+            <p>We store the following settings in Chrome's synchronized storage, which allows your preferences to sync across your devices:</p>
+            
+            <div class="data-item">
+                <strong>Presets</strong>
+                <span>Custom playback speed presets (up to 8 presets) that you configure</span>
+            </div>
+            
+            <div class="data-item">
+                <strong>Auto-Skip Settings</strong>
+                <span>Your preferences for automatically skipping intros, recaps, and credits, including click delay settings and debug mode preferences</span>
+            </div>
+            
+            <div class="data-item">
+                <strong>Site Settings</strong>
+                <span>Which streaming platforms (Netflix, YouTube, Disney+, etc.) you have enabled or disabled the extension for</span>
+            </div>
+            
+            <div class="data-item">
+                <strong>Theme Preferences</strong>
+                <span>Your dark mode or light mode preference</span>
+            </div>
+            
+            <div class="data-item">
+                <strong>Per-Site Speed</strong>
+                <span>Playback speed preferences saved for specific websites</span>
+            </div>
+            
+            <h3>1.2 Statistics (Chrome Storage Sync)</h3>
+            <p>We collect anonymous usage statistics to help you track your usage:</p>
+            
+            <div class="data-item">
+                <strong>Usage Statistics</strong>
+                <span>Number of intros skipped, number of recaps skipped, and estimated total time saved (in seconds). These statistics are stored locally and can be reset at any time.</span>
+            </div>
+            
+            <h3>1.3 Premium Status (Chrome Storage Local)</h3>
+            <div class="data-item">
+                <strong>License Information</strong>
+                <span>Your premium subscription status (free or premium) and the timestamp of the last license check. This data is stored locally on your device only.</span>
+            </div>
+            
+            <h3>1.4 Onboarding Status (Chrome Storage Local)</h3>
+            <div class="data-item">
+                <strong>First-Time User Status</strong>
+                <span>Whether you have completed the initial onboarding tutorial. This is stored locally on your device only.</span>
+            </div>
+            
+            <h3>1.5 Payment Data (Third-Party Service)</h3>
+            <div class="data-item">
+                <strong>Payment Information</strong>
+                <span>If you purchase a premium subscription, payment processing is handled by <a href="https://extensionpay.com" target="_blank" rel="noopener noreferrer">ExtensionPay</a>, a third-party payment service. We do not collect or store your payment information directly. Please refer to <a href="https://extensionpay.com/privacy" target="_blank" rel="noopener noreferrer">ExtensionPay's Privacy Policy</a> for information about how they handle your payment data.</span>
+            </div>
+            
+            <h2>2. Why We Collect This Data</h2>
+            
+            <p>We collect and store this data for the following purposes:</p>
+            
+            <ul>
+                <li><strong>Functionality:</strong> To provide the core features of the extension, such as remembering your speed presets, auto-skip preferences, and per-site settings</li>
+                <li><strong>User Experience:</strong> To sync your preferences across devices and maintain your settings between browser sessions</li>
+                <li><strong>Statistics:</strong> To provide you with insights about your usage (e.g., time saved, content skipped)</li>
+                <li><strong>Premium Features:</strong> To verify your subscription status and enable premium features</li>
+                <li><strong>Onboarding:</strong> To show or hide the initial tutorial based on whether you're a new user</li>
+            </ul>
+            
+            <h2>3. Where Data Is Stored</h2>
+            
+            <h3>3.1 Chrome Storage Sync</h3>
+            <p>
+                Settings and statistics are stored using <span class="highlight">Chrome Storage Sync</span>, which means:
+            </p>
+            <ul>
+                <li>Data is synchronized across all devices where you are signed into Chrome with the same Google account</li>
+                <li>Data is stored in Google's cloud infrastructure</li>
+                <li>Data is encrypted in transit and at rest by Google</li>
+                <li>You can access and manage this data through Chrome's sync settings</li>
+            </ul>
+            
+            <h3>3.2 Chrome Storage Local</h3>
+            <p>
+                Premium status and onboarding information are stored using <span class="highlight">Chrome Storage Local</span>, which means:
+            </p>
+            <ul>
+                <li>Data is stored only on your local device</li>
+                <li>Data is not synchronized across devices</li>
+                <li>Data remains on your device unless you uninstall the extension or clear browser data</li>
+            </ul>
+            
+            <h3>3.3 Third-Party Services</h3>
+            <p>
+                Payment information is processed and stored by ExtensionPay. We do not have access to your payment details. ExtensionPay's servers are located according to their own infrastructure and privacy policies.
+            </p>
+            
+            <h2>4. Data Sharing with Third Parties</h2>
+            
+            <p>We do not sell, rent, or share your personal data with third parties except in the following limited circumstances:</p>
+            
+            <ul>
+                <li><strong>ExtensionPay:</strong> If you purchase a premium subscription, your payment information is processed by ExtensionPay. We only receive confirmation of your payment status, not your payment details.</li>
+                <li><strong>Google Chrome:</strong> Data stored in Chrome Storage Sync is subject to Google's privacy policies and infrastructure. This is necessary for the sync functionality to work.</li>
+                <li><strong>Legal Requirements:</strong> We may disclose data if required by law or to protect our rights and the safety of our users.</li>
+            </ul>
+            
+            <p>
+                <strong>We do not:</strong>
+            </p>
+            <ul>
+                <li>Use analytics or tracking services</li>
+                <li>Collect browsing history or website content</li>
+                <li>Share data with advertisers or marketing companies</li>
+                <li>Transfer data to our own servers</li>
+            </ul>
+            
+            <h2>5. Your Rights and Control</h2>
+            
+            <p>You have full control over your data:</p>
+            
+            <ul>
+                <li><strong>View Your Data:</strong> You can view all stored settings and statistics in the extension's options page</li>
+                <li><strong>Reset Statistics:</strong> You can reset your usage statistics at any time from the options page</li>
+                <li><strong>Reset All Settings:</strong> You can reset all settings to default values from the options page</li>
+                <li><strong>Delete All Data:</strong> Uninstalling the extension will remove all locally stored data. Chrome Storage Sync data can be managed through Chrome's sync settings</li>
+                <li><strong>Disable Sync:</strong> You can disable Chrome sync for extensions in Chrome's settings if you don't want your data synchronized across devices</li>
+            </ul>
+            
+            <h2>6. Data Security</h2>
+            
+            <p>
+                We take data security seriously. All data stored in Chrome Storage Sync is encrypted by Google. Local storage data is protected by Chrome's security model. However, no method of transmission over the internet or electronic storage is 100% secure, and we cannot guarantee absolute security.
+            </p>
+            
+            <h2>7. Children's Privacy</h2>
+            
+            <p>
+                Our extension is not intended for children under the age of 13. We do not knowingly collect personal information from children. If you believe we have inadvertently collected information from a child, please contact us immediately.
+            </p>
+            
+            <h2>8. Changes to This Privacy Policy</h2>
+            
+            <p>
+                We may update this Privacy Policy from time to time. We will notify you of any changes by updating the "Last updated" date at the top of this page. You are advised to review this Privacy Policy periodically for any changes.
+            </p>
+            
+            <h2>9. Contact Us</h2>
+            
+            <p>
+                If you have any questions about this Privacy Policy or our data practices, please contact us:
+            </p>
+            <ul>
+                <li>Email: <a href="mailto:privacy@skipit-extension.com">privacy@skipit-extension.com</a> (Note: Replace with your actual contact email)</li>
+                <li>Extension: SkipIt Chrome Extension</li>
+            </ul>
+            
+            <h2>10. ExtensionPay Privacy Policy</h2>
+            
+            <p>
+                For information about how ExtensionPay handles payment data, please refer to their privacy policy:
+            </p>
+            <p>
+                <a href="https://extensionpay.com/privacy" target="_blank" rel="noopener noreferrer">ExtensionPay Privacy Policy</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2024 SkipIt. All rights reserved.</p>
+            <p style="margin-top: 8px;">
+                <a href="https://github.com/yourusername/skipit" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Set last updated date
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        
+        // Dark mode detection (optional - can be enhanced with manual toggle)
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark-mode');
+        }
+        
+        // Listen for dark mode changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+            if (e.matches) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+        });
+    </script>
+</body>
+</html>
+

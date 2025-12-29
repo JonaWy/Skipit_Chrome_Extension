@@ -181,17 +181,6 @@
         </button>
 
         <div class="collapsible-content" id="advancedSettingsContent">
-          <!-- OSD Card -->
-          <div class="settings-card">
-            <h2 class="card-title">Speed Overlay</h2>
-
-            <label class="toggle-container">
-              <span class="toggle-label">Show Speed Overlay</span>
-              <input type="checkbox" id="osdEnabled" class="toggle-checkbox" />
-              <span class="toggle-switch"></span>
-            </label>
-          </div>
-
           <!-- Shortcuts Card -->
           <div class="settings-card">
             <h2 class="card-title">Keyboard Shortcuts</h2>
@@ -240,22 +229,6 @@
 
             <label class="toggle-container has-helper">
               <div class="toggle-info">
-                <span class="toggle-label">Show Notifications</span>
-                <span class="setting-helper"
-                  >Display a brief message when intros, recaps, or ads are
-                  skipped.</span
-                >
-              </div>
-              <input
-                type="checkbox"
-                id="showNotifications"
-                class="toggle-checkbox"
-              />
-              <span class="toggle-switch"></span>
-            </label>
-
-            <label class="toggle-container has-helper">
-              <div class="toggle-info">
                 <span class="toggle-label">Debug Mode</span>
                 <span class="setting-helper"
                   >Log skip detection details to browser console for
@@ -274,6 +247,13 @@
         <button id="resetBtn" class="secondary-button" style="width: 100%">
           Reset Settings
         </button>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer-links">
+        <a href="https://yourusername.github.io/repository-name/privacy-policy.html" target="_blank" rel="noopener noreferrer">
+          Privacy Policy
+        </a>
       </div>
     </div>
     <script src="license.js"></script>
