@@ -423,7 +423,8 @@ body.dark-mode input[type="range"]::-moz-range-thumb:hover {
 kbd {
   display: inline-block;
   padding: 4px 8px;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas,
+    monospace;
   font-size: var(--font-size-sm);
   font-weight: 600;
   color: var(--color-text-primary);
