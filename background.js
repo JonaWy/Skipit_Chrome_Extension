@@ -1,47 +1,3 @@
-// Import ExtPay for payment processing
-// See: https://github.com/glench/ExtPay
-importScripts('ExtPay.js');
-
-// Initialize ExtPay with your extension ID from extensionpay.com
-const extpay = ExtPay('skipit');
-
-// Start background payment checking
-extpay.startBackground();
-
-// Listen for payment events
-extpay.onPaid.addListener(user => {
-  console.log('[SkipIt] User paid! Activating premium...');
-  chrome.storage.local.set({ premiumStatus: true }, () => {
-    // Notify all tabs about license change
-    chrome.tabs.query({}, (tabs) => {
-      tabs.forEach(tab => {
-        chrome.tabs.sendMessage(tab.id, {
-          action: "licenseUpdated",
-          isPremium: true
-        }).catch(() => {});
-      });
-    });
-  });
-});
-
-// Sync premium status on extension startup
-async function syncPremiumStatus() {
-  try {
-    const user = await extpay.getUser();
-    const isPremium = user.paid === true;
-    await chrome.storage.local.set({ 
-      premiumStatus: isPremium,
-      lastLicenseCheck: Date.now()
-    });
-    console.log('[SkipIt] Premium status synced:', isPremium ? 'PREMIUM' : 'FREE');
-  } catch (error) {
-    console.error('[SkipIt] Failed to sync premium status:', error);
-  }
-}
-
-// Sync on service worker startup
-syncPremiumStatus();
-
 // Performance: Cache frequently accessed data
 let cachedSettings = null;
 let cacheTimestamp = 0;
@@ -49,7 +5,7 @@ const CACHE_DURATION = 60000; // 1 minute cache
 
 async function getCachedSettings() {
   const now = Date.now();
-  if (!cachedSettings || (now - cacheTimestamp) > CACHE_DURATION) {
+  if (!cachedSettings || now - cacheTimestamp > CACHE_DURATION) {
     cachedSettings = await chrome.storage.sync.get(null);
     cacheTimestamp = now;
   }
@@ -63,7 +19,7 @@ chrome.storage.onChanged.addListener(() => {
 });
 
 chrome.runtime.onInstalled.addListener((details) => {
-  if (details.reason === 'install') {
+  if (details.reason === "install") {
     const defaultSettings = {
       defaultSpeed: 1.0,
       darkMode: true,
@@ -71,7 +27,7 @@ chrome.runtime.onInstalled.addListener((details) => {
       presetNames: ["Normal", "1.5x", "2.0x", "2.5x"],
       shortcuts: {
         faster: "+",
-        slower: "-"
+        slower: "-",
       },
       autoSkip: {
         introEnabled: true,
@@ -85,13 +41,13 @@ chrome.runtime.onInstalled.addListener((details) => {
         showNotifications: true,
         silenceEnabled: false,
         silenceThreshold: 30,
-        debugMode: false
+        debugMode: false,
       },
       stats: {
         introsSkipped: 0,
         recapsSkipped: 0,
         adsSkipped: 0,
-        totalTimeSaved: 0
+        totalTimeSaved: 0,
       },
       osd: {
         enabled: true,
@@ -101,20 +57,20 @@ chrome.runtime.onInstalled.addListener((details) => {
         fontFamily: "system",
         textColor: "#FFFFFF",
         opacity: 0.75,
-        showInfo: false
+        showInfo: false,
       },
       perSiteSettings: {},
       siteSettings: {},
-      blacklist: []
+      blacklist: [],
     };
 
     chrome.storage.sync.set(defaultSettings, () => {
-      console.log('[SkipIt] Default settings saved');
+      console.log("[SkipIt] Default settings saved");
     });
 
-    // Initialize premium status as false for new installs
-    chrome.storage.local.set({ premiumStatus: false }, () => {
-      console.log('[SkipIt] License initialized (Free tier)');
+    // Initialize premium status as true (Free for all)
+    chrome.storage.local.set({ premiumStatus: true }, () => {
+      console.log("[SkipIt] License initialized (Unrestricted)");
     });
   }
 });
@@ -127,34 +83,35 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         action: "simulateKey",
         key: request.key,
         code: request.code,
-        shiftKey: request.shiftKey
+        shiftKey: request.shiftKey,
       });
     }
   }
-  
-  // Handle upgrade page request
+
+  // Handle upgrade page request -> Donate
   if (request.action === "openUpgradePage") {
-    // Open ExtensionPay payment page
-    extpay.openPaymentPage();
+    chrome.tabs.create({
+      url: "https://www.buymeacoffee.com/", // Placeholder
+    });
   }
-  
+
   // Handle license status request
   if (request.action === "getLicenseStatus") {
-    chrome.storage.local.get(['premiumStatus'], (data) => {
-      sendResponse({ isPremium: data.premiumStatus === true });
-    });
-    return true; // Keep channel open for async response
+    sendResponse({ isPremium: true });
+    return false; 
   }
-  
+
   // Handle license change notification
   if (request.action === "licenseChanged") {
     // Broadcast to all tabs
     chrome.tabs.query({}, (tabs) => {
-      tabs.forEach(tab => {
-        chrome.tabs.sendMessage(tab.id, {
-          action: "licenseUpdated",
-          isPremium: request.isPremium
-        }).catch(() => {});
+      tabs.forEach((tab) => {
+        chrome.tabs
+          .sendMessage(tab.id, {
+            action: "licenseUpdated",
+            isPremium: true,
+          })
+          .catch(() => {});
       });
     });
   }

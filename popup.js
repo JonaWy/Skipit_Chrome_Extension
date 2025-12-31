@@ -52,40 +52,44 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Check if onboarding is needed
   checkOnboarding();
 
-  function updateLicenseUI() {
-    if (License.isPremium) {
-      // Premium user
-      premiumBadge.style.display = "inline-block";
-      upgradeBanner.style.display = "none";
+  // Check for support prompts after a delay (but not during onboarding)
+  setTimeout(() => {
+    chrome.storage.local.get(['onboardingCompleted'], (data) => {
+      if (data.onboardingCompleted && typeof SupportPrompts !== 'undefined') {
+        SupportPrompts.checkAndShow();
+      }
+    });
+  }, 2000);
 
-      // Unlock full speed range
-      speedSlider.min = "0.25";
-      speedSlider.max = "4.0";
-      sliderMin.textContent = "0.25x";
-      sliderMax.textContent = "4.0x";
-
-      // Remove free-tier class
-      speedSlider.parentElement.classList.remove("free-tier");
-    } else {
-      // Free user
-      premiumBadge.style.display = "none";
-      upgradeBanner.style.display = "flex";
-
-      // Limit speed range
-      speedSlider.min = "1.0";
-      speedSlider.max = "2.0";
-      sliderMin.textContent = "1.0x";
-      sliderMax.textContent = "2.0x";
-
-      // Add free-tier class
-      speedSlider.parentElement.classList.add("free-tier");
+  // Add pulse animation to coffee button if user has saved significant time
+  chrome.storage.sync.get(['stats'], (data) => {
+    const stats = data.stats || {};
+    const timeSaved = stats.totalTimeSaved || 0;
+    const coffeeButton = document.getElementById("coffeeButton");
+    
+    // Add pulse if user has saved more than 30 minutes
+    if (timeSaved > 1800 && coffeeButton) {
+      coffeeButton.classList.add("pulse");
     }
+  });
+
+  function updateLicenseUI() {
+    // Always full features
+    const speedSlider = document.getElementById("speedSlider");
+    const sliderMin = document.getElementById("sliderMin");
+    const sliderMax = document.getElementById("sliderMax");
+
+    // Unlock full speed range
+    speedSlider.min = "0.25";
+    speedSlider.max = "4.0";
+    sliderMin.textContent = "0.25x";
+    sliderMax.textContent = "4.0x";
+    
+    // Remove free-tier class
+    speedSlider.parentElement.classList.remove("free-tier");
   }
 
-  // Upgrade button handler
-  upgradeBtn?.addEventListener("click", () => {
-    chrome.runtime.sendMessage({ action: "openUpgradePage" });
-  });
+  // Upgrade button handler (removed)
 
   // Theme toggle button
   const themeToggle = document.getElementById("themeToggle");
@@ -271,9 +275,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         card.className = "preset-card";
 
         // Check if preset should be locked for free users
-        // For free users, mark the last 4 presets (indices 4-7) as Pro/locked
-        // This ensures exactly 4 presets are labeled as Pro for free-tier users
-        const isLocked = !License.isPremium && idx >= 4;
+        // No locking anymore
+        const isLocked = false;
         if (isLocked) {
           card.classList.add("locked");
         }
@@ -431,6 +434,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
+  // Coffee button handler
+  const coffeeButton = document.getElementById("coffeeButton");
+  if (coffeeButton) {
+    coffeeButton.addEventListener("click", () => {
+      chrome.tabs.create({ url: "https://www.buymeacoffee.com/" });
+      // Track that user clicked coffee button
+      chrome.storage.sync.get(['supportPrompt'], (data) => {
+        const supportPrompt = data.supportPrompt || {};
+        supportPrompt.supported = true;
+        supportPrompt.supportedDate = Date.now();
+        chrome.storage.sync.set({ supportPrompt });
+      });
+    });
+  }
+
   // Keyboard Shortcuts inside Popup
   document.addEventListener("keydown", (e) => {
     // Ignore if focus is in an input (unlikely in this popup layout but good practice)
@@ -570,12 +588,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         content:
           "Enable auto-skip for intros, recaps, and ads. Works on Netflix, YouTube, Disney+, and more!",
         icon: "⏩",
-      },
-      {
-        title: "Premium Features",
-        content:
-          "Upgrade to unlock all platforms, speeds from 0.25x to 4x, and advanced features like mini player controls.",
-        icon: "✨",
       },
     ];
 

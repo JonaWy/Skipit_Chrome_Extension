@@ -17,22 +17,46 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   loadSettings();
 
+  // Check for milestone-based support prompts
+  // Wait a bit to let the page fully load before showing prompt
+  setTimeout(() => {
+    if (typeof SupportPrompts !== 'undefined') {
+      SupportPrompts.checkAndShow();
+    }
+  }, 1000);
+
   // document.getElementById('saveBtn') is removed
   document.getElementById("resetBtn").addEventListener("click", resetSettings);
   document.getElementById("resetStats").addEventListener("click", resetStats);
 
-  // Upgrade button handler
-  document.getElementById("upgradeBtn")?.addEventListener("click", () => {
-    chrome.runtime.sendMessage({ action: "openUpgradePage" });
+  // Support button handlers
+  document.getElementById("donateBtn")?.addEventListener("click", () => {
+    chrome.tabs.create({ url: "https://www.buymeacoffee.com/" });
   });
 
-  // Manage subscription button handler (for premium users)
-  document
-    .getElementById("manageSubscriptionBtn")
-    ?.addEventListener("click", () => {
-      // Opens the same ExtPay page, which shows subscription management for paid users
-      chrome.runtime.sendMessage({ action: "openUpgradePage" });
+  document.getElementById("rateBtn")?.addEventListener("click", () => {
+    // Replace with actual Chrome Web Store URL when published
+    chrome.tabs.create({ url: "https://chrome.google.com/webstore" });
+  });
+
+  document.getElementById("shareBtn")?.addEventListener("click", () => {
+    // Copy extension URL to clipboard
+    const extensionUrl = "https://chrome.google.com/webstore"; // Replace with actual URL
+    navigator.clipboard.writeText(extensionUrl).then(() => {
+      // Show temporary feedback
+      const btn = document.getElementById("shareBtn");
+      const originalText = btn.querySelector(".support-option-title").textContent;
+      btn.querySelector(".support-option-title").textContent = "Link copied!";
+      setTimeout(() => {
+        btn.querySelector(".support-option-title").textContent = originalText;
+      }, 2000);
     });
+  });
+
+  document.getElementById("feedbackBtn")?.addEventListener("click", () => {
+    // Open feedback form or email
+    chrome.tabs.create({ url: "mailto:feedback@example.com?subject=SkipIt Feedback" });
+  });
 
   // Theme toggle button
   const themeToggle = document.getElementById("themeToggle");
@@ -77,27 +101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 function updateLicenseUI() {
-  const premiumBadge = document.getElementById("premiumBadge");
-  const upgradeCard = document.getElementById("upgradeCard");
-  const subscriptionCard = document.getElementById("subscriptionCard");
-  const platformsPremiumTag = document.getElementById("platformsPremiumTag");
-  const platformsHint = document.getElementById("platformsHint");
-
-  if (License.isPremium) {
-    // Premium user
-    if (premiumBadge) premiumBadge.style.display = "inline-block";
-    if (upgradeCard) upgradeCard.style.display = "none";
-    if (subscriptionCard) subscriptionCard.style.display = "block";
-    if (platformsPremiumTag) platformsPremiumTag.style.display = "none";
-    if (platformsHint) platformsHint.style.display = "none";
-  } else {
-    // Free user
-    if (premiumBadge) premiumBadge.style.display = "none";
-    if (upgradeCard) upgradeCard.style.display = "block";
-    if (subscriptionCard) subscriptionCard.style.display = "none";
-    if (platformsPremiumTag) platformsPremiumTag.style.display = "none";
-    if (platformsHint) platformsHint.style.display = "block";
-  }
+  // No premium UI to update
 }
 
 function formatSpeedForName(val) {
@@ -155,7 +159,7 @@ function loadSettings() {
     pContainer.innerHTML = "";
 
     const totalPresets = 8;
-    const maxEditablePresets = License.isPremium ? 8 : 4;
+    const maxEditablePresets = 8;
     const defaultPresets = [1.0, 1.25, 1.5, 1.75, 2.5, 3.0, 3.5, 4.0];
 
     const presets =
@@ -164,9 +168,7 @@ function loadSettings() {
     // Add info text
     const infoText = document.createElement("p");
     infoText.className = "presets-info";
-    infoText.textContent = License.isPremium
-      ? "Click any preset to edit its speed value"
-      : "Free: 4 presets. Upgrade to PRO to unlock all 8.";
+    infoText.textContent = "Click any preset to edit its speed value";
     pContainer.appendChild(infoText);
 
     // Create preset grid
@@ -175,13 +177,11 @@ function loadSettings() {
     pContainer.appendChild(presetsGrid);
 
     for (let i = 0; i < totalPresets; i++) {
-      const isLocked = !License.isPremium && i >= maxEditablePresets;
+      const isLocked = false;
       let presetValue =
         presets[i] !== undefined ? presets[i] : defaultPresets[i];
-      // Clamp preset value to allowed range for free-tier users
-      if (!License.isPremium && i < maxEditablePresets) {
-        presetValue = License.clampSpeed(presetValue);
-      }
+      // No clamping needed
+      
       const displayValue = formatSpeedForName(presetValue);
 
       const presetItem = document.createElement("div");
@@ -209,12 +209,8 @@ function loadSettings() {
           let val = parseSpeedValue(this.value);
           if (isNaN(val)) val = 1.0;
           // Clamp to valid range based on license tier
-          if (License.isPremium) {
-            val = Math.max(0.25, Math.min(4.0, val));
-          } else {
-            // Free tier: only allow speeds between 1.0 and 2.0
-            val = Math.max(1.0, Math.min(2.0, val));
-          }
+          val = Math.max(0.25, Math.min(4.0, val));
+          
           // Apply license-based clamping as final check
           val = License.clampSpeed(val);
           const formatted = formatSpeedForName(val);
@@ -258,7 +254,7 @@ function loadSettings() {
 
     supportedSites.forEach((site) => {
       const isEnabled = siteSettings[site.id] !== false; // Default true
-      const isLocked = !License.isPremium && !freePlatforms.includes(site.id);
+      const isLocked = false;
 
       const chip = document.createElement("div");
       chip.className = "service-chip";
@@ -307,13 +303,40 @@ function loadSettings() {
 
     // Stats
     if (settings.stats) {
-      document.getElementById("statTimeSaved").textContent = formatTimeSaved(
-        settings.stats.totalTimeSaved || 0
-      );
-      document.getElementById("statIntros").textContent =
-        settings.stats.introsSkipped || 0;
-      document.getElementById("statRecaps").textContent =
-        settings.stats.recapsSkipped || 0;
+      const timeSaved = settings.stats.totalTimeSaved || 0;
+      const introsSkipped = settings.stats.introsSkipped || 0;
+      const recapsSkipped = settings.stats.recapsSkipped || 0;
+      
+      document.getElementById("statTimeSaved").textContent = formatTimeSaved(timeSaved);
+      document.getElementById("statIntros").textContent = introsSkipped;
+      document.getElementById("statRecaps").textContent = recapsSkipped;
+      
+      // Show appreciation message if user has meaningful stats
+      const totalSkips = introsSkipped + recapsSkipped;
+      if (timeSaved > 60 || totalSkips > 5) {
+        const appreciation = document.getElementById("statsAppreciation");
+        const message = document.getElementById("statsAppreciationMessage");
+        
+        if (appreciation && message) {
+          // Generate contextual message based on stats
+          let msg = "";
+          if (timeSaved >= 3600) {
+            const hours = Math.floor(timeSaved / 3600);
+            msg = `You've saved over ${hours} hour${hours !== 1 ? 's' : ''} with SkipIt!`;
+          } else if (timeSaved >= 1800) {
+            msg = `You've saved over 30 minutes with SkipIt!`;
+          } else if (totalSkips >= 50) {
+            msg = `You've skipped ${totalSkips}+ intros and recaps!`;
+          } else if (totalSkips >= 20) {
+            msg = `You've skipped ${totalSkips} intros and recaps so far!`;
+          } else {
+            msg = `You're saving time with SkipIt!`;
+          }
+          
+          message.textContent = msg;
+          appreciation.style.display = "flex";
+        }
+      }
     }
 
     // ATTACH LISTENERS TO EVERYTHING NOW
@@ -341,7 +364,7 @@ function saveSettings() {
     };
 
     // Presets - Support up to 8 for Premium
-    const maxPresets = License.isPremium ? 8 : 4;
+    const maxPresets = 8;
     newSettings.presetNames = [];
     newSettings.presets = [];
 
@@ -352,12 +375,8 @@ function saveSettings() {
         // Accepts both comma and dot as decimal separator
         let speed = parseSpeedValue(valInput.value) || 1.0;
         // Clamp speed to allowed range based on license tier
-        if (License.isPremium) {
-          speed = Math.max(0.25, Math.min(4.0, speed));
-        } else {
-          // Free tier: only allow speeds between 1.0 and 2.0
-          speed = Math.max(1.0, Math.min(2.0, speed));
-        }
+        speed = Math.max(0.25, Math.min(4.0, speed));
+        
         // Apply license-based clamping as final check
         const clampedSpeed = License.clampSpeed(speed);
         // Auto-generate name from speed value

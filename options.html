@@ -9,12 +9,7 @@
   <body>
     <div class="container">
       <div class="header">
-        <h1 class="page-title">
-          Settings
-          <span id="premiumBadge" class="premium-badge" style="display: none"
-            >PRO</span
-          >
-        </h1>
+        <h1 class="page-title">Settings</h1>
         <button
           id="themeToggle"
           class="theme-toggle"
@@ -61,45 +56,6 @@
         </button>
       </div>
 
-      <!-- Upgrade Card (shown for free users) -->
-      <div
-        id="upgradeCard"
-        class="settings-card upgrade-card"
-        style="display: none"
-      >
-        <div class="upgrade-content">
-          <div class="upgrade-icon">🚀</div>
-          <div class="upgrade-text">
-            <h3>Upgrade to SkipIt Pro</h3>
-            <p>
-              Unlock all 7 streaming platforms, speeds from 0.25x to 4x, and
-              more!
-            </p>
-          </div>
-          <button id="upgradeBtn" class="primary-button">Upgrade Now</button>
-        </div>
-      </div>
-
-      <!-- Subscription Management Card (shown for premium users) -->
-      <div
-        id="subscriptionCard"
-        class="settings-card subscription-card"
-        style="display: none"
-      >
-        <div class="subscription-content">
-          <div class="subscription-header">
-            <span class="subscription-icon">✨</span>
-            <div class="subscription-info">
-              <h3>SkipIt Pro</h3>
-              <p class="subscription-status">Active Subscription</p>
-            </div>
-          </div>
-          <button id="manageSubscriptionBtn" class="secondary-button">
-            Manage Subscription
-          </button>
-        </div>
-      </div>
-
       <!-- Stats Card -->
       <div class="settings-card">
         <h2 class="card-title">Statistics</h2>
@@ -117,10 +73,23 @@
             <span class="stat-label">Recaps skipped</span>
           </div>
         </div>
+        <div
+          id="statsAppreciation"
+          class="stats-appreciation"
+          style="display: none"
+        >
+          <span class="stats-appreciation-icon">💡</span>
+          <p class="stats-appreciation-text">
+            <span id="statsAppreciationMessage"
+              >You're saving time with SkipIt!</span
+            >
+            Thank you for using the extension!
+          </p>
+        </div>
         <button
           id="resetStats"
           class="secondary-button"
-          style="width: 100%; margin-top: 12px"
+          style="width: 100%; margin-top: 16px"
         >
           Reset
         </button>
@@ -136,20 +105,9 @@
 
       <!-- Streaming Services Card -->
       <div class="settings-card">
-        <h2 class="card-title">
-          Streaming Services
-          <span
-            class="premium-feature-tag"
-            id="platformsPremiumTag"
-            style="display: none"
-            >PRO</span
-          >
-        </h2>
-        <p class="description" style="margin-bottom: 16px">
+        <h2 class="card-title">Streaming Services</h2>
+        <p class="description" style="margin-bottom: 12px">
           Enable or disable the app for specific services.
-          <span id="platformsHint" class="free-hint" style="display: none"
-            >Free: Netflix & YouTube only</span
-          >
         </p>
         <div id="servicesContainer">
           <!-- Filled by JS -->
@@ -185,7 +143,8 @@
           <div class="settings-card">
             <h2 class="card-title">Keyboard Shortcuts</h2>
             <p class="description" style="margin-bottom: 12px">
-              Use these shortcuts while watching videos to control playback speed.
+              Use these shortcuts while watching videos to control playback
+              speed.
             </p>
             <div class="shortcuts-list">
               <div class="shortcut-item">
@@ -249,14 +208,73 @@
         </button>
       </div>
 
+      <!-- Support Card -->
+      <div
+        id="supportCard"
+        class="settings-card subscription-card"
+        style="display: block"
+      >
+        <div class="support-content">
+          <div class="support-header">
+            <h3>Support SkipIt</h3>
+            <p class="support-description">
+              SkipIt is completely free for everyone. If it helps you, here are
+              some ways you can support the project:
+            </p>
+          </div>
+          <div class="support-options">
+            <button
+              id="donateBtn"
+              class="support-option support-option-primary"
+            >
+              <span class="support-icon">☕</span>
+              <div class="support-option-text">
+                <div class="support-option-title">Buy me a coffee</div>
+                <div class="support-option-subtitle">One-time contribution</div>
+              </div>
+            </button>
+            <button id="rateBtn" class="support-option">
+              <span class="support-icon">⭐</span>
+              <div class="support-option-text">
+                <div class="support-option-title">Rate on Web Store</div>
+                <div class="support-option-subtitle">
+                  Help others discover SkipIt
+                </div>
+              </div>
+            </button>
+            <button id="shareBtn" class="support-option">
+              <span class="support-icon">💬</span>
+              <div class="support-option-text">
+                <div class="support-option-title">Share with friends</div>
+                <div class="support-option-subtitle">Spread the word</div>
+              </div>
+            </button>
+            <button id="feedbackBtn" class="support-option">
+              <span class="support-icon">🐛</span>
+              <div class="support-option-text">
+                <div class="support-option-title">Send feedback</div>
+                <div class="support-option-subtitle">
+                  Report bugs or suggest features
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Footer -->
       <div class="footer-links">
-        <a href="https://yourusername.github.io/repository-name/privacy-policy.html" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://yourusername.github.io/repository-name/privacy-policy.html"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Privacy Policy
         </a>
       </div>
     </div>
     <script src="license.js"></script>
+    <script src="support-prompts.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

@@ -10,9 +10,6 @@
       <header>
         <h1>
           SkipIt
-          <span id="premiumBadge" class="premium-badge" style="display: none"
-            >PRO</span
-          >
         </h1>
         <div class="header-buttons">
           <button
@@ -60,6 +57,30 @@
             </svg>
           </button>
           <button
+            id="coffeeButton"
+            class="coffee-toggle"
+            aria-label="Support SkipIt"
+          >
+            <!-- Coffee icon -->
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+              <line x1="6" y1="1" x2="6" y2="4"></line>
+              <line x1="10" y1="1" x2="10" y2="4"></line>
+              <line x1="14" y1="1" x2="14" y2="4"></line>
+            </svg>
+          </button>
+          <button
             id="openOptions"
             class="settings-toggle"
             aria-label="Open settings"
@@ -82,12 +103,6 @@
           </button>
         </div>
       </header>
-
-      <!-- Upgrade Banner (shown for free users) -->
-      <div id="upgradeBanner" class="upgrade-banner" style="display: none">
-        <span>🚀 Upgrade to unlock all platforms & speeds</span>
-        <button id="upgradeBtn" class="upgrade-btn">Upgrade</button>
-      </div>
 
       <section class="speed-display-section">
         <span id="speedValue">1.00x</span>
@@ -153,6 +168,7 @@
     </div>
 
     <script src="license.js"></script>
+    <script src="support-prompts.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

@@ -9,8 +9,7 @@
     "scripting"
   ],
   "host_permissions": [
-    "<all_urls>",
-    "https://extensionpay.com/*"
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"
@@ -29,11 +28,6 @@
       ],
       "run_at": "document_end",
       "all_frames": true
-    },
-    {
-      "matches": ["https://extensionpay.com/*"],
-      "js": ["ExtPay.js"],
-      "run_at": "document_start"
     }
   ],
   "action": {
