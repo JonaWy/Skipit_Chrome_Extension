@@ -18,5 +18,12 @@ Your Privacy Policy will be available at:
 
 ## Files
 
-- `privacy-policy.html` - Privacy Policy for the SkipIt Chrome Extension
+- `index.html` - Landing Page für die SkipIt Chrome Extension
+- `privacy-policy.html` - Datenschutzerklärung für die SkipIt Chrome Extension
 
+## URLs
+
+Nach dem Deployment sind die Seiten unter folgenden URLs erreichbar:
+
+- Landing Page: `https://jonawy.github.io/Skipit_Chrome_Extension/`
+- Datenschutzerklärung: `https://jonawy.github.io/Skipit_Chrome_Extension/privacy-policy.html`
