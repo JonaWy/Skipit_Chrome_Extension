@@ -178,7 +178,7 @@ const SupportPrompts = {
     await chrome.storage.sync.set({ supportPrompt });
 
     // Open donation page
-    chrome.tabs.create({ url: 'https://www.buymeacoffee.com/' });
+    chrome.tabs.create({ url: 'https://buymeacoffee.com/jonawy' });
 
     // Close prompt
     this.closePrompt();

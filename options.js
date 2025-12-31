@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Support button handlers
   document.getElementById("donateBtn")?.addEventListener("click", () => {
-    chrome.tabs.create({ url: "https://www.buymeacoffee.com/" });
+    chrome.tabs.create({ url: "https://buymeacoffee.com/jonawy" });
   });
 
   document.getElementById("rateBtn")?.addEventListener("click", () => {

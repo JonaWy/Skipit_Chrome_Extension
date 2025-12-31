@@ -67,7 +67,7 @@ const License = {
   openPaymentPage() {
     // TODO: Add donation link here
     chrome.tabs.create({
-      url: "https://www.buymeacoffee.com/", // Placeholder
+      url: "https://buymeacoffee.com/jonawy",
     });
   },
 

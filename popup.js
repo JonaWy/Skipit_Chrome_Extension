@@ -438,7 +438,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const coffeeButton = document.getElementById("coffeeButton");
   if (coffeeButton) {
     coffeeButton.addEventListener("click", () => {
-      chrome.tabs.create({ url: "https://www.buymeacoffee.com/" });
+      chrome.tabs.create({ url: "https://buymeacoffee.com/jonawy" });
       // Track that user clicked coffee button
       chrome.storage.sync.get(['supportPrompt'], (data) => {
         const supportPrompt = data.supportPrompt || {};

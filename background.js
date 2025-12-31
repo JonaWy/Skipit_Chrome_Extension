@@ -91,7 +91,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   // Handle upgrade page request -> Donate
   if (request.action === "openUpgradePage") {
     chrome.tabs.create({
-      url: "https://www.buymeacoffee.com/", // Placeholder
+      url: "https://buymeacoffee.com/jonawy",
     });
   }
 
