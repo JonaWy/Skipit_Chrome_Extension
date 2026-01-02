@@ -51,19 +51,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Check for support prompts after a delay (but not during onboarding)
   setTimeout(() => {
-    chrome.storage.local.get(['onboardingCompleted'], (data) => {
-      if (data.onboardingCompleted && typeof SupportPrompts !== 'undefined') {
+    chrome.storage.local.get(["onboardingCompleted"], (data) => {
+      if (data.onboardingCompleted && typeof SupportPrompts !== "undefined") {
         SupportPrompts.checkAndShow();
       }
     });
   }, 2000);
 
   // Add pulse animation to coffee button if user has saved significant time
-  chrome.storage.sync.get(['stats'], (data) => {
+  chrome.storage.sync.get(["stats"], (data) => {
     const stats = data.stats || {};
     const timeSaved = stats.totalTimeSaved || 0;
     const coffeeButton = document.getElementById("coffeeButton");
-    
+
     // Add pulse if user has saved more than 30 minutes
     if (timeSaved > 1800 && coffeeButton) {
       coffeeButton.classList.add("pulse");
@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Load Settings & Presets
   chrome.storage.sync.get(
-    ["presets", "presetNames", "darkMode", "autoSkip", "siteSettings"],
+    ["presets", "darkMode", "autoSkip", "siteSettings"],
     (data) => {
       // Apply Dark Mode
       if (data.darkMode) {
@@ -223,38 +223,23 @@ document.addEventListener("DOMContentLoaded", async () => {
           });
         });
 
-      // Always show 8 presets, but mark some as Pro for free users
+      // Always show 8 presets
       const defaultPresets = [1.0, 1.25, 1.5, 1.75, 2.5, 3.0, 3.5, 4.0];
-      const defaultNames = [
-        "Normal",
-        "1.25x",
-        "1.5x",
-        "1.75x",
-        "2.5x",
-        "3.0x",
-        "3.5x",
-        "4.0x",
-      ];
 
-      // Get saved presets (only first 4 for free users)
+      // Get saved presets
       const savedPresets = data.presets || [];
-      const savedNames = data.presetNames || [];
 
       // Build final presets array: use saved for first 4, always use defaults for last 4
       const finalPresets = [];
-      const finalNames = [];
 
       for (let i = 0; i < 8; i++) {
         if (i < 4) {
           // First 4: use saved if available, otherwise default
           finalPresets[i] =
             savedPresets[i] !== undefined ? savedPresets[i] : defaultPresets[i];
-          finalNames[i] =
-            savedNames[i] !== undefined ? savedNames[i] : defaultNames[i];
         } else {
-          // Last 4: always use defaults (these are locked for free users)
+          // Last 4: always use defaults
           finalPresets[i] = defaultPresets[i];
-          finalNames[i] = defaultNames[i];
         }
       }
 
@@ -274,11 +259,11 @@ document.addEventListener("DOMContentLoaded", async () => {
           card.classList.add("locked");
         }
 
-        // Show preset name if available, otherwise show speed
-        const displayText = finalNames[idx] || formatSpeed(val);
+        // Always name according to speed (e.g., 2.5x)
+        const displayText = formatSpeed(val) + "x";
         card.textContent = displayText;
         card.dataset.speed = val;
-        card.title = `${displayText} (${formatSpeed(val)}x)`;
+        card.title = displayText;
 
         card.addEventListener("click", () => {
           if (isLocked) {
@@ -433,7 +418,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     coffeeButton.addEventListener("click", () => {
       chrome.tabs.create({ url: "https://buymeacoffee.com/jonawy" });
       // Track that user clicked coffee button
-      chrome.storage.sync.get(['supportPrompt'], (data) => {
+      chrome.storage.sync.get(["supportPrompt"], (data) => {
         const supportPrompt = data.supportPrompt || {};
         supportPrompt.supported = true;
         supportPrompt.supportedDate = Date.now();
