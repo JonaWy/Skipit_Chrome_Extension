@@ -158,12 +158,7 @@
       .nav-brand-icon {
         width: 32px;
         height: 32px;
-        background: linear-gradient(135deg, #6366f1, #4f46e5);
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
+        object-fit: contain;
       }
 
       .nav-actions {
@@ -244,22 +239,16 @@
       }
 
       .hero-icon {
-        width: 100px;
-        height: 100px;
+        width: 120px;
+        height: 120px;
         margin: 0 auto 32px;
-        background: linear-gradient(135deg, #6366f1, #4f46e5);
-        border-radius: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 48px;
-        box-shadow: 0 12px 40px rgba(99, 102, 241, 0.35);
+        object-fit: contain;
         animation: float 4s ease-in-out infinite;
+        filter: drop-shadow(0 12px 40px rgba(99, 102, 241, 0.35));
       }
 
       body.dark-mode .hero-icon {
-        background: linear-gradient(135deg, #818cf8, #6366f1);
-        box-shadow: 0 12px 40px rgba(129, 140, 248, 0.3);
+        filter: drop-shadow(0 12px 40px rgba(129, 140, 248, 0.3));
       }
 
       .hero h1 {
@@ -537,18 +526,6 @@
         border-color: var(--color-border);
       }
 
-      .feature-icon {
-        width: 56px;
-        height: 56px;
-        background: var(--color-bg-tertiary);
-        border-radius: var(--radius-lg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 28px;
-        margin-bottom: 20px;
-      }
-
       .feature-card h3 {
         font-size: 1.25rem;
         font-weight: 600;
@@ -722,21 +699,6 @@
         border: 1px solid var(--color-border-light);
         border-radius: var(--radius-xl);
         padding: 40px;
-        display: flex;
-        gap: 24px;
-        align-items: flex-start;
-      }
-
-      .privacy-icon {
-        width: 64px;
-        height: 64px;
-        background: rgba(34, 197, 94, 0.1);
-        border-radius: var(--radius-lg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 32px;
-        flex-shrink: 0;
       }
 
       .privacy-content h3 {
@@ -863,13 +825,8 @@
         }
 
         .privacy-card {
-          flex-direction: column;
           text-align: center;
           padding: 32px 24px;
-        }
-
-        .privacy-icon {
-          margin: 0 auto;
         }
 
         .privacy-list {
@@ -920,7 +877,7 @@
     <nav>
       <div class="nav-content">
         <a href="#" class="nav-brand">
-          <div class="nav-brand-icon">⚡</div>
+          <img src="logo.png" alt="SkipIt" class="nav-brand-icon" />
           SkipIt
         </a>
         <div class="nav-actions">
@@ -973,7 +930,7 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
-        <div class="hero-icon">⚡</div>
+        <img src="logo.png" alt="SkipIt" class="hero-icon" />
         <h1>SkipIt</h1>
         <p class="hero-tagline">
           Optimize your video streaming. Automatically skip intros and recaps,
@@ -1073,7 +1030,6 @@
 
         <div class="features-grid">
           <div class="feature-card">
-            <div class="feature-icon">🎚️</div>
             <h3>Precise Speed Control</h3>
             <p>
               Control playback speed from 0.25x to 4.0x with an intuitive
@@ -1090,7 +1046,6 @@
           </div>
 
           <div class="feature-card">
-            <div class="feature-icon">⏭️</div>
             <h3>Automatic Skipping</h3>
             <p>
               Enable auto-skip for intros, recaps and credits. SkipIt
@@ -1100,7 +1055,6 @@
           </div>
 
           <div class="feature-card">
-            <div class="feature-icon">📊</div>
             <h3>Statistics Tracking</h3>
             <p>
               Keep track of your saved time. SkipIt tracks how many intros and
@@ -1109,7 +1063,6 @@
           </div>
 
           <div class="feature-card">
-            <div class="feature-icon">🌓</div>
             <h3>Dark Mode</h3>
             <p>
               Seamlessly switch between light and dark themes. SkipIt adapts to
@@ -1119,7 +1072,6 @@
           </div>
 
           <div class="feature-card">
-            <div class="feature-icon">☁️</div>
             <h3>Cross-Device Sync</h3>
             <p>
               Your settings are automatically synced with your Chrome profile.
@@ -1128,7 +1080,6 @@
           </div>
 
           <div class="feature-card">
-            <div class="feature-icon">⚙️</div>
             <h3>Customizable Settings</h3>
             <p>
               Configure every aspect: click delay for skip buttons,
@@ -1245,7 +1196,6 @@
     <section class="privacy">
       <div class="container">
         <div class="privacy-card">
-          <div class="privacy-icon">🔒</div>
           <div class="privacy-content">
             <h3>Your Privacy Matters</h3>
             <p>
