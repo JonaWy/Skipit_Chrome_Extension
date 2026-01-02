@@ -229,9 +229,6 @@ function isSupportedStreamingPlatform() {
 chrome.storage.sync.get(null, async (items) => {
   settings = items;
 
-  // Initialize license checking
-  await License.checkFromStorage();
-
   // Check if site is enabled
   const host = window.location.hostname;
   const platform = getPlatform(host);
@@ -239,13 +236,6 @@ chrome.storage.sync.get(null, async (items) => {
   // Default to true if not present
   if (settings.siteSettings && settings.siteSettings[platform] === false) {
     console.log("[SkipIt] Disabled on this site");
-    return;
-  }
-
-  // Check platform access (Free: Netflix/YouTube only)
-  if (!License.canUsePlatform(platform)) {
-    console.log("[SkipIt] Platform requires Premium:", platform);
-    // Upgrade prompt removed - no longer showing intrusive notifications to free users
     return;
   }
 
@@ -500,9 +490,8 @@ function changeSpeed(video, delta) {
 }
 
 function setSpeed(video, speed) {
-  // Apply license-based speed limits
-  // Premium: 0.25 - 4.0, Free: 1.0 - 2.0
-  speed = License.clampSpeed(speed);
+  // Apply speed limits
+  speed = Math.max(0.25, Math.min(4.0, speed));
 
   // Round to 2 decimals to avoid floating point weirdness
   speed = Math.round(speed * 100) / 100;
@@ -871,17 +860,6 @@ class IntroSkipper {
       if (settings.autoSkip?.debugMode) {
         console.log(
           "[SkipIt] Auto-Skip disabled: Not a supported streaming platform"
-        );
-      }
-      return;
-    }
-
-    // Check license: Free users can only use Auto-Skip on Netflix/YouTube
-    if (!License.canUseAutoSkip(platform)) {
-      if (settings.autoSkip?.debugMode) {
-        console.log(
-          "[SkipIt] Auto-Skip on this platform requires Premium:",
-          platform
         );
       }
       return;

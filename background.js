@@ -67,11 +67,6 @@ chrome.runtime.onInstalled.addListener((details) => {
     chrome.storage.sync.set(defaultSettings, () => {
       console.log("[SkipIt] Default settings saved");
     });
-
-    // Initialize premium status as true (Free for all)
-    chrome.storage.local.set({ premiumStatus: true }, () => {
-      console.log("[SkipIt] License initialized (Unrestricted)");
-    });
   }
 });
 
@@ -92,27 +87,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "openUpgradePage") {
     chrome.tabs.create({
       url: "https://buymeacoffee.com/jonawy",
-    });
-  }
-
-  // Handle license status request
-  if (request.action === "getLicenseStatus") {
-    sendResponse({ isPremium: true });
-    return false; 
-  }
-
-  // Handle license change notification
-  if (request.action === "licenseChanged") {
-    // Broadcast to all tabs
-    chrome.tabs.query({}, (tabs) => {
-      tabs.forEach((tab) => {
-        chrome.tabs
-          .sendMessage(tab.id, {
-            action: "licenseUpdated",
-            isPremium: true,
-          })
-          .catch(() => {});
-      });
     });
   }
 });

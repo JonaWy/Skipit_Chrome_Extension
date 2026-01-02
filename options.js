@@ -9,12 +9,6 @@ const supportedSites = [
 ];
 
 document.addEventListener("DOMContentLoaded", async () => {
-  // Initialize license checking
-  await License.checkFromStorage();
-
-  // Update UI based on license status
-  updateLicenseUI();
-
   loadSettings();
 
   // Check for milestone-based support prompts
@@ -100,9 +94,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
-function updateLicenseUI() {
-  // No premium UI to update
-}
 
 function formatSpeedForName(val) {
   // Format speed value as preset name (e.g., 2.0 -> "2.0", 1.25 -> "1.25")
@@ -208,11 +199,8 @@ function loadSettings() {
           // Parse and format on blur
           let val = parseSpeedValue(this.value);
           if (isNaN(val)) val = 1.0;
-          // Clamp to valid range based on license tier
+          // Clamp to valid range
           val = Math.max(0.25, Math.min(4.0, val));
-          
-          // Apply license-based clamping as final check
-          val = License.clampSpeed(val);
           const formatted = formatSpeedForName(val);
           this.value = formatted;
           this.setAttribute("data-speed", val);
@@ -374,15 +362,12 @@ function saveSettings() {
         // Parse the displayed value (formatted speed string like "1.5" or "2.0")
         // Accepts both comma and dot as decimal separator
         let speed = parseSpeedValue(valInput.value) || 1.0;
-        // Clamp speed to allowed range based on license tier
+        // Clamp speed to valid range
         speed = Math.max(0.25, Math.min(4.0, speed));
-        
-        // Apply license-based clamping as final check
-        const clampedSpeed = License.clampSpeed(speed);
         // Auto-generate name from speed value
-        const presetName = formatSpeedForName(clampedSpeed);
+        const presetName = formatSpeedForName(speed);
         newSettings.presetNames.push(presetName);
-        newSettings.presets.push(clampedSpeed);
+        newSettings.presets.push(speed);
       }
     }
 

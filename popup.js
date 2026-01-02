@@ -43,11 +43,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const sliderMin = document.getElementById("sliderMin");
   const sliderMax = document.getElementById("sliderMax");
 
-  // Initialize license checking
-  await License.checkFromStorage();
-
-  // Update UI based on license status
-  updateLicenseUI();
+  // Initialize UI
+  updateSpeedUI();
 
   // Check if onboarding is needed
   checkOnboarding();
@@ -73,20 +70,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  function updateLicenseUI() {
-    // Always full features
+  function updateSpeedUI() {
+    // Set full speed range
     const speedSlider = document.getElementById("speedSlider");
     const sliderMin = document.getElementById("sliderMin");
     const sliderMax = document.getElementById("sliderMax");
 
-    // Unlock full speed range
     speedSlider.min = "0.25";
     speedSlider.max = "4.0";
     sliderMin.textContent = "0.25x";
     sliderMax.textContent = "4.0x";
-    
-    // Remove free-tier class
-    speedSlider.parentElement.classList.remove("free-tier");
   }
 
   // Upgrade button handler (removed)
@@ -489,8 +482,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   function setSpeed(speed, updateSlider = true) {
-    // Apply license-based bounds
-    speed = License.clampSpeed(speed);
+    // Apply speed bounds
+    speed = Math.max(0.25, Math.min(4.0, speed));
     speed = Math.round(speed * 100) / 100;
 
     if (updateSlider) updateUI(speed);

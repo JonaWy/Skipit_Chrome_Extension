@@ -222,7 +222,6 @@ SkipIt Extension
 ├── content.js             # Content script for video manipulation
 ├── popup.html/js/css      # Popup user interface
 ├── options.html/js/css    # Settings page
-├── license.js             # License management
 └── support-prompts.js     # Support prompts
 ```
 
