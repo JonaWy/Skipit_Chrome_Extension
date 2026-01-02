@@ -235,7 +235,9 @@ chrome.storage.sync.get(null, async (items) => {
 
   // Default to true if not present
   if (settings.siteSettings && settings.siteSettings[platform] === false) {
-    console.log("[SkipIt] Disabled on this site");
+    if (settings.autoSkip?.debugMode) {
+      console.log("[SkipIt] Disabled on this site");
+    }
     return;
   }
 
@@ -705,10 +707,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
   } catch (e) {
     // Fallback to enabled if check fails
-    console.error(
-      "[Video Speed Controller+] Error checking disabled status:",
-      e
-    );
+    if (settings.autoSkip?.debugMode) {
+      console.error("[SkipIt] Error checking disabled status:", e);
+    }
   }
 
   if (request.action === "getSpeed") {
@@ -721,12 +722,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     return true;
   } else if (request.action === "setSpeed") {
-    console.log("[VSC+] Received setSpeed:", request.speed);
+    if (settings.autoSkip?.debugMode) {
+      console.log("[SkipIt] Received setSpeed:", request.speed);
+    }
     const v = getTargetVideo();
-    console.log("[VSC+] Target video:", v ? "found" : "NOT FOUND");
+    if (settings.autoSkip?.debugMode) {
+      console.log("[SkipIt] Target video:", v ? "found" : "NOT FOUND");
+    }
     if (v) {
       setSpeed(v, request.speed);
-      console.log("[VSC+] Speed set to:", request.speed);
+      if (settings.autoSkip?.debugMode) {
+        console.log("[SkipIt] Speed set to:", request.speed);
+      }
       sendResponse({ success: true, speed: request.speed });
     } else {
       sendResponse({ success: false, noVideo: true });
