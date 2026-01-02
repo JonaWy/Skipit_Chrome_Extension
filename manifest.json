@@ -4,9 +4,7 @@
   "version": "1.0.0",
   "description": "Skip intros, recaps & control video speed on Netflix, YouTube and more",
   "permissions": [
-    "storage",
-    "activeTab",
-    "scripting"
+    "storage"
   ],
   "host_permissions": [
     "<all_urls>"

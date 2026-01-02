@@ -231,9 +231,7 @@ SkipIt Extension
 - **Manifest Version**: 3 (latest Chrome Extension API)
 - **Permissions**:
   - `storage` - Store settings and statistics
-  - `activeTab` - Access active tab
-  - `scripting` - Inject content scripts
-  - `<all_urls>` - Work on all websites
+  - `<all_urls>` - Work on all websites (for content scripts)
 - **Storage**: Chrome Sync Storage for cross-device synchronization
 - **Performance**:
   - Caching for frequently used data
