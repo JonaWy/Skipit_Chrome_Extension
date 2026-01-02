@@ -1,5 +1,7 @@
 # SkipIt - Chrome Extension Documentation
 
+![SkipIt Banner](banner.png)
+
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![License](https://img.shields.io/badge/license-Free-green.svg)
 ![Chrome](https://img.shields.io/badge/Chrome-Extension-orange.svg)
