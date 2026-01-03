@@ -1,43 +1,43 @@
-# SkipIt - Dokumentation
+# SkipIt - Documentation
 
-SkipIt ist eine Browser-Erweiterung für Google Chrome zur Optimierung der Videowiedergabe. Die Erweiterung ermöglicht das automatisierte Überspringen von Segmenten (Intros, Rückblicke) und bietet eine erweiterte Steuerung der Wiedergabegeschwindigkeit.
+SkipIt is a Google Chrome extension designed to optimize video playback. The extension automates the skipping of segments (intros, recaps) and provides advanced playback speed control.
 
-## Kernfunktionen
+## Key Features
 
-### Automatisierung
-- Automatisches Überspringen von Intros, Rückblicken und Abspannen auf unterstützten Plattformen.
-- Unterstützte Dienste: Netflix, Disney+, Amazon Prime Video, Crunchyroll, Apple TV+ und Paramount+.
+### Automation
+- Automatically skips intros, recaps, and credits on supported platforms.
+- Supported services: Netflix, Disney+, Amazon Prime Video, Crunchyroll, Apple TV+, and Paramount+.
 
-### Geschwindigkeitssteuerung
-- Anpassung der Wiedergaberate zwischen 0,25x und 4,0x.
-- Unterstützung für alle HTML5-Videoplayer (einschließlich YouTube und Vimeo).
-- Acht konfigurierbare Presets für den Schnellzugriff.
-- Speicherung der Geschwindigkeitseinstellungen pro Domäne.
+### Speed Control
+- Adjust playback rate between 0.25x and 4.0x.
+- Support for all HTML5 video players (including YouTube and Vimeo).
+- Eight configurable presets for quick access.
+- Domain-specific speed setting persistence.
 
-## Bedienung und Tastaturkürzel
+## Usage and Keyboard Shortcuts
 
-Die Steuerung erfolgt über das Popup-Interface oder folgende Tastenkombinationen:
+Control is available through the popup interface or via the following keyboard shortcuts:
 
-- **+ / NumPad +**: Erhöht die Geschwindigkeit um 0,25x.
-- **- / NumPad -**: Verringert die Geschwindigkeit um 0,25x.
-- **1 bis 8**: Aktiviert das entsprechende Geschwindigkeits-Preset.
+- **+ / NumPad +**: Increase speed by 0.25x.
+- **- / NumPad -**: Decrease speed by 0.25x.
+- **1 to 8**: Activate the corresponding speed preset.
 
 ## Installation
 
 ### Chrome Web Store
-Die Installation erfolgt regulär über den Chrome Web Store.
+Standard installation through the Chrome Web Store.
 
-### Manuelle Installation (Entwicklermodus)
-1. Repository klonen oder herunterladen.
-2. `chrome://extensions/` im Browser öffnen und den "Entwicklermodus" aktivieren.
-3. "Entpackte Erweiterung laden" wählen und das Projektverzeichnis selektieren.
+### Manual Installation (Developer Mode)
+1. Clone or download the repository.
+2. Open `chrome://extensions/` in your browser and enable "Developer mode".
+3. Select "Load unpacked" and choose the project directory.
 
-## Technische Spezifikationen
+## Technical Specifications
 
-- **Manifest-Version**: 3
-- **Berechtigungen**: Erfordert Zugriff auf `storage` zur Sicherung von Präferenzen sowie Host-Berechtigungen für Video-Inhalte.
-- **Datenschutz**: Sämtliche Daten (Statistiken und Einstellungen) werden lokal gespeichert oder via Chrome Sync synchronisiert. Es findet keine Übertragung an externe Server statt.
+- **Manifest Version**: 3
+- **Permissions**: Requires `storage` access for preference persistence and host permissions for video content.
+- **Privacy**: All data (statistics and settings) is stored locally or synchronized via Chrome Sync. No data is transmitted to external servers.
 
-## Lizenz
+## License
 
-Dieses Projekt ist freie Software und kann unter Berücksichtigung der Repository-Richtlinien verwendet und modifiziert werden.
+This project is free software and can be used and modified in accordance with the repository's guidelines.
