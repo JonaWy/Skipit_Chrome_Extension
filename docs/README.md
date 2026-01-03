@@ -40,4 +40,4 @@ Standard installation through the Chrome Web Store.
 
 ## License
 
-This project is free software and can be used and modified in accordance with the repository's guidelines.
+This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
