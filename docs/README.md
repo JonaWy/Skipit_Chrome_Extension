@@ -25,7 +25,7 @@ Control is available through the popup interface or via the following keyboard s
 ## Installation
 
 ### Chrome Web Store
-Standard installation through the Chrome Web Store.
+Standard installation through the [Chrome Web Store](https://chromewebstore.google.com/detail/skipit/accbbbbemppchhcifkagiegdhfgjmilb?hl=de).
 
 ### Manual Installation (Developer Mode)
 1. Clone or download the repository.
