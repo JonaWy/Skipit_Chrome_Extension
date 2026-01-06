@@ -29,13 +29,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   document.getElementById("rateBtn")?.addEventListener("click", () => {
-    // Replace with actual Chrome Web Store URL when published
-    chrome.tabs.create({ url: "https://chrome.google.com/webstore" });
+    chrome.tabs.create({ url: "https://chromewebstore.google.com/detail/skipit/accbbbbemppchhcifkagiegdhfgjmilb?hl=de" });
   });
 
   document.getElementById("shareBtn")?.addEventListener("click", () => {
     // Copy extension URL to clipboard
-    const extensionUrl = "https://chrome.google.com/webstore"; // Replace with actual URL
+    const extensionUrl = "https://jonawy.github.io/Skipit_Chrome_Extension/";
     navigator.clipboard.writeText(extensionUrl).then(() => {
       // Show temporary feedback
       const btn = document.getElementById("shareBtn");
