@@ -23,8 +23,8 @@ chrome.runtime.onInstalled.addListener((details) => {
     const defaultSettings = {
       defaultSpeed: 1.0,
       darkMode: true,
-      presets: [1.0, 1.5, 2.0, 2.5],
-      presetNames: ["Normal", "1.5x", "2.0x", "2.5x"],
+      presets: [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0],
+      presetNames: ["1.0x", "1.25x", "1.5x", "1.75x", "2.0x", "2.5x", "3.0x", "4.0x"],
       shortcuts: {
         faster: "+",
         slower: "-",

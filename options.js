@@ -150,7 +150,7 @@ function loadSettings() {
 
     const totalPresets = 8;
     const maxEditablePresets = 8;
-    const defaultPresets = [1.0, 1.25, 1.5, 1.75, 2.5, 3.0, 3.5, 4.0];
+    const defaultPresets = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0];
 
     const presets =
       settings.presets || defaultPresets.slice(0, maxEditablePresets);

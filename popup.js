@@ -224,23 +224,18 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
       // Always show 8 presets
-      const defaultPresets = [1.0, 1.25, 1.5, 1.75, 2.5, 3.0, 3.5, 4.0];
+      const defaultPresets = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 4.0];
 
       // Get saved presets
       const savedPresets = data.presets || [];
 
-      // Build final presets array: use saved for first 4, always use defaults for last 4
+      // Build final presets array
       const finalPresets = [];
 
       for (let i = 0; i < 8; i++) {
-        if (i < 4) {
-          // First 4: use saved if available, otherwise default
-          finalPresets[i] =
-            savedPresets[i] !== undefined ? savedPresets[i] : defaultPresets[i];
-        } else {
-          // Last 4: always use defaults
-          finalPresets[i] = defaultPresets[i];
-        }
+        // Use saved if available, otherwise default
+        finalPresets[i] =
+          savedPresets[i] !== undefined ? savedPresets[i] : defaultPresets[i];
       }
 
       // Always use 4-column grid for 8 presets
