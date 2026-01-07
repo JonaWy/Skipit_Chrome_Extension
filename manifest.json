@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "SkipIt",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Skip intros, recaps & control video speed on Netflix, YouTube and more",
   "permissions": ["storage"],
   "host_permissions": ["<all_urls>"],
