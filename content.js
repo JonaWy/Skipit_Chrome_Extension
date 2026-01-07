@@ -15,6 +15,11 @@ let lastPlaybackCheckUrl = null;
 // Debounce timer for savePerSiteSpeed (Point 6 bonus)
 let saveSpeedTimeout = null;
 
+// Sticky-Speed: User-selected speed that should persist across video changes
+let userSelectedSpeed = null;
+// Flag to prevent ratechange listener from triggering during our own speed corrections
+let isCorrectingSpeed = false;
+
 // Performance optimizations: Lazy loading and caching
 const featureCache = {
   osdInitialized: false,
@@ -246,25 +251,125 @@ chrome.storage.sync.get(null, async (items) => {
 });
 
 // Debounced storage change handler for better performance
-const debouncedStorageChange = debounce((changes) => {
-  for (let key in changes) {
-    settings[key] = changes[key].newValue;
+const debouncedStorageChange = debounce((changes, areaName) => {
+  // Handle sync storage changes (settings)
+  if (areaName === 'sync') {
+    for (let key in changes) {
+      settings[key] = changes[key].newValue;
+    }
+    if (changes.autoSkip && introSkipper) {
+      introSkipper.init(); // Re-init to pick up changes
+    }
+    // Reset feature cache when settings change
+    if (changes.osd) {
+      featureCache.osdInitialized = false;
+    }
+    
+    // If perSiteSettings changed, update userSelectedSpeed
+    if (changes.perSiteSettings) {
+      const platform = getPlatform(window.location.hostname);
+      const newSettings = changes.perSiteSettings.newValue;
+      if (newSettings && newSettings[platform] && newSettings[platform].speed) {
+        const newSpeed = newSettings[platform].speed;
+        if (userSelectedSpeed !== newSpeed) {
+          userSelectedSpeed = newSpeed;
+          // Apply to current video if exists
+          const video = getTargetVideo();
+          if (video && Math.abs(video.playbackRate - newSpeed) > 0.01) {
+            isCorrectingSpeed = true;
+            video.playbackRate = newSpeed;
+            isCorrectingSpeed = false;
+          }
+        }
+      }
+    }
   }
-  if (changes.autoSkip && introSkipper) {
-    introSkipper.init(); // Re-init to pick up changes
-  }
-  // Reset feature cache when settings change
-  if (changes.osd) {
-    featureCache.osdInitialized = false;
+  
+  // Handle local storage changes (cross-tab sync)
+  if (areaName === 'local' && changes.currentSpeed) {
+    const platform = getPlatform(window.location.hostname);
+    const newSpeed = changes.currentSpeed.newValue;
+    const newPlatform = changes.currentPlatform?.newValue;
+    
+    // Only update if the change is for the same platform
+    if (newPlatform === platform && newSpeed && userSelectedSpeed !== newSpeed) {
+      userSelectedSpeed = newSpeed;
+      // Apply to current video if exists
+      const video = getTargetVideo();
+      if (video && Math.abs(video.playbackRate - newSpeed) > 0.01) {
+        isCorrectingSpeed = true;
+        video.playbackRate = newSpeed;
+        isCorrectingSpeed = false;
+      }
+    }
   }
 }, 100);
 
-chrome.storage.onChanged.addListener((changes) => {
-  debouncedStorageChange(changes);
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  debouncedStorageChange(changes, areaName);
 });
 
 function initialize() {
-  // Initial scan
+  // Load saved speed for this platform (Sticky-Speed)
+  const hostname = window.location.hostname;
+  const platform = getPlatform(hostname);
+  
+  // First, check LOCAL storage for the most recent speed (set immediately by other tabs)
+  // This fixes the race condition where sync storage hasn't been updated yet due to debouncing
+  chrome.storage.local.get(["currentSpeed", "currentPlatform"], (localData) => {
+    let speedFromLocal = null;
+    
+    // Only use local storage if it's for the same platform
+    if (localData.currentSpeed && localData.currentPlatform === platform) {
+      speedFromLocal = localData.currentSpeed;
+    }
+    
+    // Check platform-based sync storage (new format)
+    let speedFromSync = null;
+    if (
+      settings.perSiteSettings &&
+      settings.perSiteSettings[platform] &&
+      settings.perSiteSettings[platform].speed
+    ) {
+      speedFromSync = settings.perSiteSettings[platform].speed;
+    }
+    // Fallback to hostname-based storage (old format) for backwards compatibility
+    else if (
+      settings.perSiteSettings &&
+      settings.perSiteSettings[hostname] &&
+      settings.perSiteSettings[hostname].speed
+    ) {
+      speedFromSync = settings.perSiteSettings[hostname].speed;
+    }
+    
+    // Use the MOST RECENT speed: prefer local storage (updated immediately) over sync storage (debounced)
+    // If both exist, use local storage as it's more up-to-date
+    if (speedFromLocal !== null) {
+      userSelectedSpeed = speedFromLocal;
+    } else if (speedFromSync !== null) {
+      userSelectedSpeed = speedFromSync;
+    } else {
+      userSelectedSpeed = settings.defaultSpeed || 1.0;
+    }
+
+    // Save current speed to local storage for popup synchronization
+    chrome.storage.local.set({ 
+      currentSpeed: userSelectedSpeed,
+      currentPlatform: platform
+    });
+    
+    // Apply speed to any existing videos that were already attached
+    document.querySelectorAll("video").forEach((video) => {
+      if (videos.has(video) && userSelectedSpeed && Math.abs(video.playbackRate - userSelectedSpeed) > 0.01) {
+        isCorrectingSpeed = true;
+        video.playbackRate = userSelectedSpeed;
+        isCorrectingSpeed = false;
+      }
+    });
+  });
+
+  // Initial scan - run SYNCHRONOUSLY, don't wait for storage callback
+  // userSelectedSpeed may be updated later by the callback above
   document.querySelectorAll("video").forEach(attachController);
 
   // Auto Skipper
@@ -287,45 +392,63 @@ function initialize() {
 
   // Keyboard listener
   document.addEventListener("keydown", handleKeydown, true);
-
-  // Check per-site settings
-  const host = window.location.hostname;
-  if (
-    settings.perSiteSettings &&
-    settings.perSiteSettings[host] &&
-    settings.perSiteSettings[host].speed
-  ) {
-    // We might want to apply this default speed to all videos on load
-  }
 }
 
 function attachController(video) {
   if (videos.has(video)) return;
   videos.add(video);
 
-  const host = window.location.hostname;
-  let startSpeed = settings.defaultSpeed || 1.0;
+  // Use userSelectedSpeed (already loaded in initialize from platform settings)
+  const startSpeed = userSelectedSpeed || settings.defaultSpeed || 1.0;
 
-  if (
-    settings.perSiteSettings &&
-    settings.perSiteSettings[host] &&
-    settings.perSiteSettings[host].speed
-  ) {
-    startSpeed = settings.perSiteSettings[host].speed;
-  }
-
-  // Apply speed if not 1.0
+  // Apply speed immediately
   if (startSpeed !== 1.0) {
+    isCorrectingSpeed = true;
     video.playbackRate = startSpeed;
+    isCorrectingSpeed = false;
   }
 
   // Auto-skip listeners
   video.addEventListener("timeupdate", () => handleAutoSkip(video));
 
-  // Rate change listener (force our speed if site tries to change it? - Optional, maybe too aggressive.
-  // Better: Update OSD if it changes)
+  // Sticky-Speed: Enforce speed when video starts playing (e.g., playlist advancement)
+  video.addEventListener("play", () => {
+    if (userSelectedSpeed && Math.abs(video.playbackRate - userSelectedSpeed) > 0.01) {
+      if (settings.autoSkip?.debugMode) {
+        console.log(`[SkipIt] Play event: Correcting speed from ${video.playbackRate} to ${userSelectedSpeed}`);
+      }
+      isCorrectingSpeed = true;
+      video.playbackRate = userSelectedSpeed;
+      isCorrectingSpeed = false;
+    }
+  });
+
+  // Sticky-Speed: Correct speed if platform tries to change it
   video.addEventListener("ratechange", () => {
-    // Optional: show OSD on external change?
+    // Skip if we're the ones changing the speed
+    if (isCorrectingSpeed) return;
+
+    // Check if the new rate differs from user's choice
+    if (userSelectedSpeed && Math.abs(video.playbackRate - userSelectedSpeed) > 0.01) {
+      if (settings.autoSkip?.debugMode) {
+        console.log(`[SkipIt] Ratechange: Platform changed speed to ${video.playbackRate}, correcting to ${userSelectedSpeed}`);
+      }
+      isCorrectingSpeed = true;
+      video.playbackRate = userSelectedSpeed;
+      isCorrectingSpeed = false;
+    }
+  });
+
+  // Also enforce on loadeddata (when new video source is loaded, e.g., in playlists)
+  video.addEventListener("loadeddata", () => {
+    if (userSelectedSpeed && Math.abs(video.playbackRate - userSelectedSpeed) > 0.01) {
+      if (settings.autoSkip?.debugMode) {
+        console.log(`[SkipIt] Loadeddata: Applying speed ${userSelectedSpeed}`);
+      }
+      isCorrectingSpeed = true;
+      video.playbackRate = userSelectedSpeed;
+      isCorrectingSpeed = false;
+    }
   });
 }
 
@@ -498,7 +621,14 @@ function setSpeed(video, speed) {
   // Round to 2 decimals to avoid floating point weirdness
   speed = Math.round(speed * 100) / 100;
 
+  // Update userSelectedSpeed (Sticky-Speed feature)
+  userSelectedSpeed = speed;
+
+  // Set flag to prevent ratechange listener from triggering
+  isCorrectingSpeed = true;
   video.playbackRate = speed;
+  isCorrectingSpeed = false;
+
   showOsd(speed);
   savePerSiteSpeed(speed);
 
@@ -512,19 +642,27 @@ function setSpeed(video, speed) {
   });
 }
 
-// Debounced save function for better performance
+// Debounced save function for full perSiteSettings (includes all platforms)
 const debouncedSavePerSiteSpeed = debounce((perSiteSettings) => {
   chrome.storage.sync.set({ perSiteSettings });
 }, 1000);
 
 function savePerSiteSpeed(speed) {
-  const host = window.location.hostname;
+  // Use platform ID instead of hostname for consistent storage across subdomains
+  const platform = getPlatform(window.location.hostname);
   if (!settings.perSiteSettings) settings.perSiteSettings = {};
-  if (!settings.perSiteSettings[host]) settings.perSiteSettings[host] = {};
+  if (!settings.perSiteSettings[platform]) settings.perSiteSettings[platform] = {};
 
-  settings.perSiteSettings[host].speed = speed;
+  settings.perSiteSettings[platform].speed = speed;
 
-  // Use debounced save to avoid excessive storage writes
+  // Save current speed IMMEDIATELY for popup synchronization
+  // This ensures the popup always shows the correct value when opened
+  chrome.storage.local.set({ 
+    currentSpeed: speed,
+    currentPlatform: platform
+  });
+
+  // Use debounced save for full perSiteSettings to avoid excessive sync storage writes
   debouncedSavePerSiteSpeed(settings.perSiteSettings);
 }
 
@@ -715,10 +853,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "getSpeed") {
     const v = getTargetVideo();
     if (v) {
-      sendResponse({ speed: v.playbackRate });
+      // Return userSelectedSpeed if set (Sticky-Speed), otherwise current playbackRate
+      // This ensures popup shows the correct speed even during video transitions
+      const reportedSpeed = userSelectedSpeed || v.playbackRate;
+      sendResponse({ speed: reportedSpeed });
     } else {
       // Always respond, even if no video found - prevents popup from hanging
-      sendResponse({ speed: null, noVideo: true });
+      // Return userSelectedSpeed if available so popup shows correct value
+      sendResponse({ speed: userSelectedSpeed || null, noVideo: true });
     }
     return true;
   } else if (request.action === "setSpeed") {

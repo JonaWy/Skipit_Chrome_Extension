@@ -323,15 +323,56 @@ document.addEventListener("DOMContentLoaded", async () => {
       // (video might not be ready immediately after page load)
       const tabId = tabs[0].id;
 
+      // Load saved speed from storage
+      function loadSavedSpeed() {
+        const hostname = new URL(tabs[0].url || "").hostname;
+        const platform = getPlatform(hostname);
+        
+        // First check local storage for currentSpeed (instantly updated by content script)
+        chrome.storage.local.get(["currentSpeed", "currentPlatform"], (localData) => {
+          // If we have a current speed for this platform, use it
+          if (localData.currentSpeed && localData.currentPlatform === platform) {
+            updateUI(localData.currentSpeed);
+            return;
+          }
+          
+          // Fallback to sync storage
+          chrome.storage.sync.get(["perSiteSettings", "defaultSpeed"], (data) => {
+            let savedSpeed = data.defaultSpeed || 1.0;
+            // Check platform-based storage first (new format)
+            if (data.perSiteSettings && data.perSiteSettings[platform] && data.perSiteSettings[platform].speed) {
+              savedSpeed = data.perSiteSettings[platform].speed;
+            }
+            // Fallback to hostname-based storage (old format) for backwards compatibility
+            else if (data.perSiteSettings && data.perSiteSettings[hostname] && data.perSiteSettings[hostname].speed) {
+              savedSpeed = data.perSiteSettings[hostname].speed;
+            }
+            updateUI(savedSpeed);
+          });
+        });
+      }
+
       function fetchSpeed(retries = 3) {
+        // First, immediately load from local storage for instant display
+        const hostname = new URL(tabs[0].url || "").hostname;
+        const platform = getPlatform(hostname);
+        
+        chrome.storage.local.get(["currentSpeed", "currentPlatform"], (localData) => {
+          // If we have a current speed for this platform, show it immediately
+          if (localData.currentSpeed && localData.currentPlatform === platform) {
+            updateUI(localData.currentSpeed);
+          }
+        });
+        
+        // Then try to get the live value from content script
         chrome.tabs.sendMessage(tabId, { action: "getSpeed" }, (response) => {
           // Handle connection errors
           if (chrome.runtime.lastError) {
             if (retries > 0) {
               setTimeout(() => fetchSpeed(retries - 1), 500);
             } else {
-              // Fallback: set default speed so slider remains functional
-              updateUI(1.0);
+              // Fallback: load saved speed from storage
+              loadSavedSpeed();
             }
             return;
           }
@@ -341,20 +382,35 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
           }
 
-          // If no video found yet, retry
+          // If content script has a video with valid speed, trust it completely
+          if (response && response.speed !== undefined && response.speed !== null && !response.noVideo) {
+            updateUI(response.speed);
+            return;
+          }
+          
+          // If noVideo but content script has a speed, we need to decide:
+          // The content script's userSelectedSpeed might be stale (from old tab state)
+          // Local storage is updated immediately, so prefer it when there's no active video
           if (response && response.noVideo) {
-            if (retries > 0) {
-              setTimeout(() => fetchSpeed(retries - 1), 500);
-            } else {
-              // Fallback: set default speed so slider remains functional
-              updateUI(1.0);
-            }
+            // Get the most recent value from local storage
+            chrome.storage.local.get(["currentSpeed", "currentPlatform"], (localData) => {
+              // Prefer local storage if it matches current platform
+              if (localData.currentSpeed && localData.currentPlatform === platform) {
+                updateUI(localData.currentSpeed);
+              } else if (response.speed !== undefined && response.speed !== null) {
+                // Fallback to content script's value if local storage doesn't match
+                updateUI(response.speed);
+              } else if (retries > 0) {
+                setTimeout(() => fetchSpeed(retries - 1), 500);
+              } else {
+                loadSavedSpeed();
+              }
+            });
             return;
           }
 
-          if (response && response.speed !== undefined) {
-            updateUI(response.speed);
-          }
+          // Final fallback
+          loadSavedSpeed();
         });
       }
 
