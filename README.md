@@ -82,7 +82,7 @@ Stop wasting time clicking "Skip Intro" – let SkipIt handle it for you while y
 ### Chrome Web Store (Recommended)
 
 <a href="https://chromewebstore.google.com/detail/skipit/accbbbbemppchhcifkagiegdhfgjmilb">
-  <img src="https://storage.googleapis.com/web-dev-uploads/image/WlD8wC6g8khYWPJUsQceQkhXSlv1/iNEddTyWiMfLSwFD6qGq.png" alt="Available in the Chrome Web Store" width="200">
+  <img src="https://developer.chrome.com/static/docs/webstore/branding/image/HRs9MPufa1J1h5glNhut.png" alt="Available in the Chrome Web Store" width="200">
 </a>
 
 ### Manual Installation (Developer Mode)
