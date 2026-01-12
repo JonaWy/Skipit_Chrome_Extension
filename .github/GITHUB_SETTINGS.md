@@ -8,7 +8,7 @@ Go to your repository → Click the gear icon next to "About"
 
 **Description:**
 ```
-⏭️ Skip intros, recaps & credits on Netflix, Disney+, Prime Video. Video speed control 0.25x-4x on any website. Free Chrome extension.
+⏭️ Skip intros & recaps on Netflix, Disney+, Prime Video. Video speed control 0.25x-4x on any website. Free Chrome extension.
 ```
 
 **Website:**
@@ -85,7 +85,7 @@ Go to **Releases** → **Create a new release**
    ## SkipIt v1.0.1
 
    ### Features
-   - Automatically skip intros, recaps, and credits on Netflix, Disney+, Prime Video, and more
+   - Automatically skip intros and recaps on Netflix, Disney+, Prime Video, and more
    - Video playback speed control from 0.25x to 4.0x
    - 8 customizable speed presets
    - Keyboard shortcuts for quick control

@@ -50,7 +50,6 @@ Stop wasting time clicking "Skip Intro" – let SkipIt handle it for you while y
 ### Auto-Skip
 - **Skip Intro** – Automatically clicks "Skip Intro" buttons
 - **Skip Recap** – Skips "Skip Recap" on supported platforms
-- **Skip Credits** – Jumps past end credits to the next episode
 - **Multi-language** – Works with skip buttons in English, German, Spanish, French, and more
 
 ### Speed Control
@@ -67,14 +66,14 @@ Stop wasting time clicking "Skip Intro" – let SkipIt handle it for you while y
 
 ## Supported Platforms
 
-| Platform | Skip Intro | Skip Recap | Skip Credits |
-|----------|:----------:|:----------:|:------------:|
-| Netflix | ✅ | ✅ | ✅ |
-| Disney+ | ✅ | ✅ | ✅ |
-| Amazon Prime Video | ✅ | ✅ | ✅ |
-| Crunchyroll | ✅ | ✅ | – |
-| Apple TV+ | ✅ | ✅ | – |
-| Paramount+ | ✅ | ✅ | – |
+| Platform | Skip Intro | Skip Recap |
+|----------|:----------:|:----------:|
+| Netflix | ✅ | ✅ |
+| Disney+ | ✅ | ✅ |
+| Amazon Prime Video | ✅ | ✅ |
+| Crunchyroll | ✅ | ✅ |
+| Apple TV+ | ✅ | ✅ |
+| Paramount+ | ✅ | ✅ |
 
 > **Note:** Speed control works on **all websites** with HTML5 video players.
 
