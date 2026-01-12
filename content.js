@@ -398,57 +398,93 @@ function attachController(video) {
   if (videos.has(video)) return;
   videos.add(video);
 
+  const platform = getPlatform(window.location.hostname);
+
   // Use userSelectedSpeed (already loaded in initialize from platform settings)
   const startSpeed = userSelectedSpeed || settings.defaultSpeed || 1.0;
 
-  // Apply speed immediately
+  // Helper function to safely apply speed (only when video is ready)
+  const safeApplySpeed = (speed, source) => {
+    // Don't apply speed if video isn't ready yet (prevents Crunchyroll loading issues)
+    if (video.readyState < 1) {
+      if (settings.autoSkip?.debugMode) {
+        console.log(`[SkipIt] ${source}: Video not ready (readyState=${video.readyState}), deferring speed change`);
+      }
+      return false;
+    }
+    
+    if (speed && Math.abs(video.playbackRate - speed) > 0.01) {
+      if (settings.autoSkip?.debugMode) {
+        console.log(`[SkipIt] ${source}: Applying speed ${speed}`);
+      }
+      isCorrectingSpeed = true;
+      video.playbackRate = speed;
+      isCorrectingSpeed = false;
+      return true;
+    }
+    return false;
+  };
+
+  // Apply speed only if video is already ready (readyState >= 1)
+  // Otherwise, wait for loadedmetadata event
   if (startSpeed !== 1.0) {
-    isCorrectingSpeed = true;
-    video.playbackRate = startSpeed;
-    isCorrectingSpeed = false;
+    if (video.readyState >= 1) {
+      isCorrectingSpeed = true;
+      video.playbackRate = startSpeed;
+      isCorrectingSpeed = false;
+    }
+    // Speed will be applied on loadedmetadata if video isn't ready yet
   }
 
   // Auto-skip listeners
   video.addEventListener("timeupdate", () => handleAutoSkip(video));
 
+  // Apply speed when video metadata is loaded (safe point for Crunchyroll)
+  video.addEventListener("loadedmetadata", () => {
+    safeApplySpeed(userSelectedSpeed, "Loadedmetadata");
+  });
+
   // Sticky-Speed: Enforce speed when video starts playing (e.g., playlist advancement)
   video.addEventListener("play", () => {
-    if (userSelectedSpeed && Math.abs(video.playbackRate - userSelectedSpeed) > 0.01) {
-      if (settings.autoSkip?.debugMode) {
-        console.log(`[SkipIt] Play event: Correcting speed from ${video.playbackRate} to ${userSelectedSpeed}`);
-      }
-      isCorrectingSpeed = true;
-      video.playbackRate = userSelectedSpeed;
-      isCorrectingSpeed = false;
-    }
+    // Small delay to let the player initialize properly (fixes Crunchyroll)
+    setTimeout(() => {
+      safeApplySpeed(userSelectedSpeed, "Play event");
+    }, 100);
   });
 
   // Sticky-Speed: Correct speed if platform tries to change it
+  // Use debounced correction to avoid conflicts with player initialization
+  let ratechangeTimeout = null;
   video.addEventListener("ratechange", () => {
     // Skip if we're the ones changing the speed
     if (isCorrectingSpeed) return;
+    
+    // Don't correct during initial load (prevents Crunchyroll issues)
+    if (video.readyState < 2) return;
 
-    // Check if the new rate differs from user's choice
-    if (userSelectedSpeed && Math.abs(video.playbackRate - userSelectedSpeed) > 0.01) {
-      if (settings.autoSkip?.debugMode) {
-        console.log(`[SkipIt] Ratechange: Platform changed speed to ${video.playbackRate}, correcting to ${userSelectedSpeed}`);
+    // Debounce ratechange corrections to avoid rapid-fire conflicts
+    if (ratechangeTimeout) clearTimeout(ratechangeTimeout);
+    ratechangeTimeout = setTimeout(() => {
+      // Check if the new rate differs from user's choice
+      if (userSelectedSpeed && Math.abs(video.playbackRate - userSelectedSpeed) > 0.01) {
+        if (settings.autoSkip?.debugMode) {
+          console.log(`[SkipIt] Ratechange: Platform changed speed to ${video.playbackRate}, correcting to ${userSelectedSpeed}`);
+        }
+        isCorrectingSpeed = true;
+        video.playbackRate = userSelectedSpeed;
+        isCorrectingSpeed = false;
       }
-      isCorrectingSpeed = true;
-      video.playbackRate = userSelectedSpeed;
-      isCorrectingSpeed = false;
-    }
+    }, 150);
   });
 
   // Also enforce on loadeddata (when new video source is loaded, e.g., in playlists)
   video.addEventListener("loadeddata", () => {
-    if (userSelectedSpeed && Math.abs(video.playbackRate - userSelectedSpeed) > 0.01) {
-      if (settings.autoSkip?.debugMode) {
-        console.log(`[SkipIt] Loadeddata: Applying speed ${userSelectedSpeed}`);
-      }
-      isCorrectingSpeed = true;
-      video.playbackRate = userSelectedSpeed;
-      isCorrectingSpeed = false;
-    }
+    safeApplySpeed(userSelectedSpeed, "Loadeddata");
+  });
+  
+  // Canplay is another safe point to apply speed
+  video.addEventListener("canplay", () => {
+    safeApplySpeed(userSelectedSpeed, "Canplay");
   });
 }
 
