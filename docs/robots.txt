@@ -1,0 +1,8 @@
+# robots.txt for SkipIt Chrome Extension Landing Page
+# https://jonawy.github.io/Skipit_Chrome_Extension/
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://jonawy.github.io/Skipit_Chrome_Extension/sitemap.xml

@@ -3,12 +3,120 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SkipIt - Chrome Extension for Video Streaming</title>
+    <title>SkipIt - Skip Intro Extension | Video Speed Controller for Netflix, Disney+, Prime Video</title>
     <meta
       name="description"
-      content="Optimize your video streaming experience with SkipIt. Automatically skip intros, recaps and get precise playback speed control."
+      content="Free Chrome extension to automatically skip intros, recaps & credits on Netflix, Disney+, Amazon Prime Video. Control video playback speed from 0.25x to 4x on any website."
     />
+    <meta name="keywords" content="skip intro chrome extension, video speed controller, netflix intro skipper, disney plus skip intro, amazon prime skip recap, playback speed extension, streaming extension, auto skip intro" />
+    <meta name="author" content="SkipIt" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://jonawy.github.io/Skipit_Chrome_Extension/" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://jonawy.github.io/Skipit_Chrome_Extension/" />
+    <meta property="og:title" content="SkipIt - Skip Intro Extension & Video Speed Controller" />
+    <meta property="og:description" content="Free Chrome extension to automatically skip intros, recaps & credits on Netflix, Disney+, Prime Video. Control playback speed on any video." />
+    <meta property="og:image" content="https://jonawy.github.io/Skipit_Chrome_Extension/banner.png" />
+    <meta property="og:site_name" content="SkipIt" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://jonawy.github.io/Skipit_Chrome_Extension/" />
+    <meta name="twitter:title" content="SkipIt - Skip Intro Extension & Video Speed Controller" />
+    <meta name="twitter:description" content="Free Chrome extension to automatically skip intros, recaps & credits on Netflix, Disney+, Prime Video." />
+    <meta name="twitter:image" content="https://jonawy.github.io/Skipit_Chrome_Extension/banner.png" />
+    
     <link rel="icon" type="image/png" href="../icons/icon48.png" />
+    
+    <!-- Schema.org Structured Data - SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "SkipIt",
+      "description": "Chrome extension to automatically skip intros, recaps and credits on streaming platforms and control video playback speed.",
+      "applicationCategory": "BrowserApplication",
+      "operatingSystem": "Chrome",
+      "browserRequirements": "Requires Google Chrome",
+      "url": "https://jonawy.github.io/Skipit_Chrome_Extension/",
+      "downloadUrl": "https://chromewebstore.google.com/detail/skipit/accbbbbemppchhcifkagiegdhfgjmilb",
+      "softwareVersion": "1.0.1",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5",
+        "ratingCount": "1"
+      },
+      "featureList": [
+        "Automatically skip intros on Netflix, Disney+, Prime Video",
+        "Skip recaps and credits",
+        "Video playback speed control from 0.25x to 4x",
+        "8 customizable speed presets",
+        "Keyboard shortcuts for quick control",
+        "Works on all HTML5 video players",
+        "Dark mode support",
+        "Cross-device sync via Chrome"
+      ],
+      "screenshot": "https://jonawy.github.io/Skipit_Chrome_Extension/banner.png"
+    }
+    </script>
+    
+    <!-- Schema.org Structured Data - FAQPage -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What streaming services does SkipIt support?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SkipIt supports Netflix, Disney+, Amazon Prime Video, Crunchyroll, Apple TV+, and Paramount+. The speed control feature works on any website with HTML5 video players, including YouTube and Vimeo."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is SkipIt free to use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, SkipIt is completely free. You can install it from the Chrome Web Store at no cost."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I change video playback speed with SkipIt?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can change the playback speed using the popup slider, clicking preset buttons (1.0x to 2.0x), or using keyboard shortcuts: Press + to increase speed and - to decrease speed by 0.25x. Press 1-8 to select a preset."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does SkipIt collect my data?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No, SkipIt does not collect any personal data. All settings and statistics are stored locally on your device or synced via your Chrome profile. There are no analytics or third-party trackers."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does the auto-skip feature work?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "SkipIt automatically detects skip buttons on streaming platforms (like 'Skip Intro' or 'Skip Recap') and clicks them for you. It supports multiple languages and works in the background while you watch."
+          }
+        }
+      ]
+    }
+    </script>
+    
     <style>
       /* CSS Variables - Light Mode */
       :root {
@@ -889,6 +997,90 @@
           font-size: 14px;
         }
       }
+
+      /* FAQ Section */
+      .faq {
+        padding: 80px 24px;
+        background: var(--color-bg-primary);
+        border-top: 1px solid var(--color-border-light);
+      }
+
+      .faq-container {
+        max-width: 800px;
+        margin: 40px auto 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .faq-item {
+        background: var(--color-bg-tertiary);
+        border: 1px solid var(--color-border-light);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        transition: all 0.2s ease;
+      }
+
+      .faq-item:hover {
+        border-color: var(--color-border);
+      }
+
+      .faq-item[open] {
+        box-shadow: var(--shadow-md);
+      }
+
+      .faq-question {
+        padding: 20px 24px;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--color-text-primary);
+        cursor: pointer;
+        list-style: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .faq-question::-webkit-details-marker {
+        display: none;
+      }
+
+      .faq-question::after {
+        content: "+";
+        font-size: 20px;
+        font-weight: 400;
+        color: var(--color-primary);
+        flex-shrink: 0;
+        transition: transform 0.2s ease;
+      }
+
+      .faq-item[open] .faq-question::after {
+        transform: rotate(45deg);
+      }
+
+      .faq-answer {
+        padding: 0 24px 20px;
+        color: var(--color-text-secondary);
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      .faq-answer ul {
+        margin: 12px 0 0 20px;
+        padding: 0;
+      }
+
+      .faq-answer li {
+        margin-bottom: 8px;
+      }
+
+      .faq-answer kbd {
+        padding: 2px 8px;
+        font-size: 13px;
+        min-width: auto;
+        height: auto;
+      }
     </style>
   </head>
   <body>
@@ -896,7 +1088,7 @@
     <nav>
       <div class="nav-content">
         <a href="#" class="nav-brand">
-          <img src="logo.png" alt="SkipIt" class="nav-brand-icon" />
+          <img src="logo.png" alt="SkipIt Chrome Extension" class="nav-brand-icon" />
           SkipIt
         </a>
         <div class="nav-actions">
@@ -972,11 +1164,11 @@
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
-        <img src="logo.png" alt="SkipIt" class="hero-icon" />
-        <h1>SkipIt</h1>
+        <img src="logo.png" alt="SkipIt - Skip Intro Chrome Extension Logo" class="hero-icon" />
+        <h1>SkipIt – Skip Intro Extension & Video Speed Controller</h1>
         <p class="hero-tagline">
-          Optimize your video streaming. Automatically skip intros and recaps,
-          control playback speed precisely – on all major platforms.
+          Automatically skip intros, recaps and credits on Netflix, Disney+, Amazon Prime Video and more. 
+          Control video playback speed from 0.25x to 4x on any website – completely free.
         </p>
         <div class="hero-buttons">
           <a
@@ -1254,6 +1446,80 @@
       </div>
     </section>
 
+    <!-- FAQ Section -->
+    <section class="faq" id="faq">
+      <div class="container">
+        <div class="section-header">
+          <span class="section-label">FAQ</span>
+          <h2 class="section-title">Frequently Asked Questions</h2>
+          <p class="section-subtitle">
+            Everything you need to know about SkipIt.
+          </p>
+        </div>
+
+        <div class="faq-container">
+          <details class="faq-item" open>
+            <summary class="faq-question">
+              What streaming services does SkipIt support?
+            </summary>
+            <div class="faq-answer">
+              <p>SkipIt supports <strong>Netflix, Disney+, Amazon Prime Video, Crunchyroll, Apple TV+, and Paramount+</strong> for automatic intro and recap skipping. The video speed control feature works on any website with HTML5 video players, including YouTube, Vimeo, and educational platforms.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              Is SkipIt free to use?
+            </summary>
+            <div class="faq-answer">
+              <p>Yes, SkipIt is <strong>completely free</strong>. You can install it from the Chrome Web Store at no cost. There are no premium features, subscriptions, or hidden fees.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              How do I change video playback speed with SkipIt?
+            </summary>
+            <div class="faq-answer">
+              <p>There are three ways to control playback speed:</p>
+              <ul>
+                <li><strong>Popup slider:</strong> Click the SkipIt icon and drag the slider</li>
+                <li><strong>Preset buttons:</strong> Click any preset (1.0x, 1.25x, 1.5x, etc.)</li>
+                <li><strong>Keyboard shortcuts:</strong> Press <kbd>+</kbd> to increase, <kbd>-</kbd> to decrease speed, or <kbd>1-8</kbd> to select a preset</li>
+              </ul>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              Does SkipIt collect my data?
+            </summary>
+            <div class="faq-answer">
+              <p><strong>No, SkipIt does not collect any personal data.</strong> All settings and statistics are stored locally on your device or synced privately via your Chrome profile. There are no analytics, third-party trackers, or external data transmission.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              How does the auto-skip feature work?
+            </summary>
+            <div class="faq-answer">
+              <p>SkipIt automatically detects skip buttons on streaming platforms (like "Skip Intro", "Skip Recap", or "Skip Credits") and clicks them for you. It supports <strong>multiple languages</strong> and works silently in the background while you watch your content.</p>
+            </div>
+          </details>
+
+          <details class="faq-item">
+            <summary class="faq-question">
+              Does SkipIt work on YouTube?
+            </summary>
+            <div class="faq-answer">
+              <p>Yes! While YouTube has built-in speed controls, SkipIt offers more granular control with speeds up to <strong>4x</strong> (vs YouTube's 2x limit) and convenient keyboard shortcuts. The auto-skip feature is designed for streaming platforms, not YouTube ads.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="cta">
       <div class="cta-content">
@@ -1276,6 +1542,7 @@
     <!-- Footer -->
     <footer>
       <div class="footer-links">
+        <a href="#faq">FAQ</a>
         <a href="privacy-policy.html">Privacy Policy</a>
         <a
           href="https://github.com/Jonawy/Skipit_Chrome_Extension"
